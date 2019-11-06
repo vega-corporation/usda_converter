@@ -73,8 +73,9 @@ def GetMeshData(obj):
 
     # material indices
     usda.mat_indices = { ms.material.name : [] for ms in obj.material_slots }
-    for i, poly in enumerate( obj.data.polygons ):
-        usda.mat_indices[ obj.material_slots[ poly.material_index ].name ].append( i )
+    if obj.material_slots:
+        for i, poly in enumerate( obj.data.polygons ):
+            usda.mat_indices[ obj.material_slots[ poly.material_index ].name ].append( i )
 
     return usda
 
