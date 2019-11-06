@@ -230,3 +230,6 @@ def RegenerateShaderTree(tree):
     if tree.original_output:
         output.location = tree.original_output.location
     AlignNodes(tree, output)
+
+    # clear extra tree nodes
+    tree.nodes.clear()

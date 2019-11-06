@@ -95,6 +95,9 @@ class NodeTreeEx():
         self.tree = tree
         self.nodes = []# append node
         self.original_output = None
+
+    def __del__(self):
+        self.DeleteNodes()
         
     def AddNode(self, node_id):
         node = self.tree.nodes.new(node_id)
@@ -110,7 +113,6 @@ class NodeTreeEx():
             self.original_output.is_active_output = True
         for node in self.nodes:
             node.id_data.nodes.remove(node)
-
 
 
 

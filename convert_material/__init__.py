@@ -45,9 +45,6 @@ def ConvertMaterialUsda(tex_dir, objects):
         
         # composit color
         shader_data[mat.name] = create_textures.CreateTexturesUsda(mat, tex_dir)
-
-        # delete PBR nodes
-        tree.DeleteNodes()
     
     return shader_data
 
