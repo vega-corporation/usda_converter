@@ -88,13 +88,14 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
 
         # target objects
         objects = [obj for obj in bpy.data.objects if obj.type == 'MESH']
+        objects = [obj for obj in objects if len(obj.data.polygons) != 0]
         if keywords.key['use_selection']:
             objects = [obj for obj in objects if obj.select_get()]
 
         # get usda shader and mesh
         tex_dir = os.path.splitext(keywords.key["filepath"])[0] + '_textures'
-        usda_shaders = convert_material.ConvertMaterialUsda(tex_dir, objects)
         usda_meshes = convert_mesh.GetMeshDataAll(objects)
+        usda_shaders = convert_material.ConvertMaterialUsda(tex_dir, objects)
         
         # export usda
         export_usda.ExportUsda(objects, usda_meshes, usda_shaders)
