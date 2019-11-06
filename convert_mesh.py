@@ -9,12 +9,13 @@ from . import usda_mesh
 
 
 # Triangulate（Required for iOS13.）
-def MeshTriangulate():
-    bpy.ops.object.mode_set(mode = 'EDIT')
-    bpy.ops.mesh.reveal()
-    bpy.ops.mesh.select_all(action = 'SELECT')
-    bpy.ops.mesh.quads_convert_to_tris()
-    bpy.ops.object.mode_set(mode = 'OBJECT')
+def MeshTriangulate(me):
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.triangulate(bm, faces=bm.faces)
+    bm.to_mesh(me)
+    bm.free()
 
 
 
@@ -82,38 +83,21 @@ def GetMeshData(obj):
 
 def GetMeshDataAll(objects):
     usda_meshes = {}
-    # get active
-    actived = bpy.context.view_layer.objects.active
-    selected = [obj for obj in bpy.data.objects if obj.select_get()]
 
     # get original objects mesh
     for obj in objects:
-        # make sub object
-        bpy.ops.object.select_all(action='DESELECT')
-        obj.select_set(True)
-        bpy.context.view_layer.objects.active = obj
-        bpy.ops.object.duplicate()
-        sub_obj = bpy.context.view_layer.objects.active
+        sub_obj = obj
 
         # apply modifiers
         if keywords.key["use_mesh_modifiers"]:
-            for modifier in sub_obj.modifiers:
-                bpy.ops.object.modifier_apply(modifier=modifier.name)
+            depsgraph = bpy.context.evaluated_depsgraph_get()
+            sub_obj = obj.evaluated_get(depsgraph)
 
         # triangulate
-        MeshTriangulate()
+        MeshTriangulate(sub_obj.data)
 
         # get mesh data
         usda_meshes[obj.data.name] = GetMeshData(sub_obj)
-        
-        # remove sub object
-        bpy.data.meshes.remove(sub_obj.data)
-    
-    # set active
-    bpy.context.view_layer.objects.active = actived
-    bpy.ops.object.select_all(action='DESELECT')
-    for obj in selected:
-        obj.select_set(True)
 
     return usda_meshes
 
