@@ -74,8 +74,6 @@ def CompositeTree(tex_dir, scn, mat, socket, name, make_image_flag = True):
             tex_path = os.path.join(mat_dir, name+".png")
             scn.render.filepath = tex_path
             bpy.ops.render.render(scene=scn.name, write_still=True)
-        # delete composite tree
-        extree.DeleteNodes()
             
     # link mat socket to image
     if make_image_flag:

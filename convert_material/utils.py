@@ -97,22 +97,17 @@ class NodeTreeEx():
         self.original_output = None
 
     def __del__(self):
-        self.DeleteNodes()
+        # remove nodes
+        for node in self.nodes:
+            node.id_data.nodes.remove(node)
+        if self.original_output:
+            self.original_output.is_active_output = True
         
     def AddNode(self, node_id):
         node = self.tree.nodes.new(node_id)
         self.nodes.append(node)
         return node
 
-    def DeleteNodes(self):
-        if self.original_output:
-            for node in self.nodes:
-                if node.type == 'OUTPUT_MATERIAL' and node.is_active_output:
-                    node.is_active_output = False
-                    break
-            self.original_output.is_active_output = True
-        for node in self.nodes:
-            node.id_data.nodes.remove(node)
 
 
 
