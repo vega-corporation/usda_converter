@@ -192,8 +192,16 @@ def "Materials"
 
 def ExportUsda(objects, usda_meshes, usda_shaders):
     # export usda
+    scn = bpy.context.scene
     usda = """#usda 1.0
-(
+("""
+    if keywords.key["use_animation"]:
+        usda += """
+    startTimeCode = """+str(scn.frame_start)+"""
+    endTimeCode = """+str(scn.frame_end)+"""
+    timeCodesPerSecond = """+str(60.0*scn.render.frame_map_new/scn.render.frame_map_old)
+
+    usda += """
     upAxis = "Z"
 )"""
     usda += ConvertUsdaMeshes(objects, usda_meshes)

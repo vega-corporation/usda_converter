@@ -59,11 +59,11 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             description="Export selected objects only",
             default=False,
             )
-    # use_animation: BoolProperty(
-    #         name="Animation",
-    #         description="Write out an OBJ for each frame",
-    #         default=False,
-    #         )
+    use_animation: BoolProperty(
+            name="Animation",
+            description="Write out an OBJ for each frame",
+            default=True,
+            )
     use_mesh_modifiers: BoolProperty(
             name="Apply Modifiers",
             description="Apply modifiers",

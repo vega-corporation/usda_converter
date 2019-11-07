@@ -10,10 +10,3 @@ class UsdaMesh():
         self.uv = None
         self.uv_indices = None
         self.mat_indices = None
-
-
-class Animation():
-    def __init__(self):
-        self.end = 0
-        self.start = 0
-        self.fps = 24
