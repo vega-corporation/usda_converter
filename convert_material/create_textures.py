@@ -111,39 +111,6 @@ def GetPrincipledShader(mat):
 
 
 
-def CreateTexturesPrincipled(mat, output_dir):
-    # create new scene
-    scn = CreateSceneComposite()
-    principled = GetPrincipledShader(mat)
-
-    CompositeTree(output_dir, scn, mat, principled.inputs['Base Color'], 'Base_Color')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Subsurface'], 'Subsurface')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Subsurface Radius'], 'Subsurface_Radius')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Subsurface Color'], 'Subsurface_Color')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Metallic'], 'Metallic')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Specular'], 'Specular')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Specular Tint'], 'Specular_Tint')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Roughness'], 'Roughness')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Anisotropic'], 'Anisotropic')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Anisotropic Rotation'], 'Anisotropic_Rotation')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Sheen'], 'Sheen')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Sheen Tint'], 'Sheen_Tint')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Clearcoat'], 'Clearcoat')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Clearcoat Roughness'], 'Clearcoat_Roughness')
-    CompositeTree(output_dir, scn, mat, principled.inputs['IOR'], 'IOR')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Transmission'], 'Transmission')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Transmission Roughness'], 'Transmission_Roughness')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Emission'], 'Emission')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Alpha'], 'Alpha')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Normal'], 'Normal')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Clearcoat Normal'], 'Clearcoat_Normal')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Tangent'], 'Tangent')
-
-    # delete scene
-    bpy.data.scenes.remove(scn)
-
-
-
 def CreateTexturesUsda(mat, tex_dir):
     # create new scene
     scn = CreateSceneComposite()
