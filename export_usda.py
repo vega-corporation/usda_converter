@@ -31,9 +31,9 @@ def ConvertUsdaMeshes(objects, usda_meshes):
         normals_indices = usda_mesh.normal_indices
 
         # translate object for usda
-        translate = tuple(np.array([obj.location[0], obj.location[2], -obj.location[1]])*100)
-        rotateXYZ = (obj.rotation_euler[0]*180/np.pi-90, obj.rotation_euler[2]*180/np.pi, -obj.rotation_euler[1]*180/np.pi)
-        scale = tuple(obj.scale)
+        # translate = tuple(np.array([obj.location[0], obj.location[1], obj.location[2]])*100)
+        # rotateXYZ = (obj.rotation_euler[0]*180/np.pi, obj.rotation_euler[1]*180/np.pi, obj.rotation_euler[2]*180/np.pi)
+        # scale = tuple(obj.scale)
 
         usda += """
 
@@ -55,15 +55,15 @@ def Mesh """+'"'+mesh_name+'"'+"""
     )
     int[] primvars:uv:indices = """+usda_mesh.uv_indices
 
-        usda += """
-    double3 xformOp:translate = """+str(translate)+"""
-    float3 xformOp:rotateXYZ = """+str(rotateXYZ)+"""
-    float3 xformOp:scale = """+str(scale)+"""
-    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+#         usda += """
+#     double3 xformOp:translate = """+str(translate)+"""
+#     float3 xformOp:rotateXYZ = """+str(rotateXYZ)+"""
+#     float3 xformOp:scale = """+str(scale)+"""
+#     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
 
-    uniform token subdivisionScheme = "none"
+#     uniform token subdivisionScheme = "none"
 
-"""
+# """
     # Parameters not reflected in usdz
     # uniform bool doubleSided = 1
     # uint ambientOcclusionSamples = 5
@@ -192,7 +192,10 @@ def "Materials"
 
 def ExportUsda(objects, usda_meshes, usda_shaders):
     # export usda
-    usda = "#usda 1.0\n"
+    usda = """#usda 1.0
+(
+    upAxis = "Z"
+)"""
     usda += ConvertUsdaMeshes(objects, usda_meshes)
     usda += ConvertUsdaMaterials(usda_shaders)
 

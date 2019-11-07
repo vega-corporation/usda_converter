@@ -23,7 +23,9 @@ def MeshTriangulate(me):
 def GetMeshData(obj):
     usda = usda_mesh.UsdaMesh()
 
-    mesh = obj.data
+    mesh = obj.to_mesh()
+
+    mesh.transform(obj.matrix_world)
 
     # get vertex
     faceVertexCounts = [None]*len(mesh.polygons)
