@@ -74,7 +74,7 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             description="Write out the active UV coordinates",
             default=True,
             )
-    use_composite: BoolProperty(
+    use_new_textures: BoolProperty(
             name="Write Textures",
             description="Write out the textures file",
             default=True,

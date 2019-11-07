@@ -22,7 +22,7 @@ import os
 
 def ConvertMaterialUsda(tex_dir, objects):
     # make dir
-    if keywords.key["use_composite"]:
+    if keywords.key["use_new_textures"]:
         os.makedirs(tex_dir, exist_ok=True)
     
     # target materials

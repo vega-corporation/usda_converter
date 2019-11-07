@@ -56,7 +56,7 @@ def CompositeTree(tex_dir, scn, mat, color, socket, name):
     if from_node.type == 'TEX_IMAGE':
         filepath = from_node.image.filepath_from_user()
         if os.path.exists(filepath):
-            if keywords.key["use_composite"]:
+            if keywords.key["use_new_textures"]:
                 ext = os.path.splitext(filepath)[1]
                 tex_path = os.path.join(mat_dir, name+ext)
                 os.makedirs(mat_dir, exist_ok=True)
@@ -66,8 +66,9 @@ def CompositeTree(tex_dir, scn, mat, color, socket, name):
             else:
                 color_ = [usda_shader.UsdaTexture()]
                 color_[0].file = filepath
+
     # make composite texture
-    elif keywords.key["use_composite"]:
+    elif keywords.key["use_new_textures"]:
         # default render size
         utils.CompositeNode.render_resolution = [32, 32]
         # make composite tree
@@ -118,7 +119,7 @@ def CreateTexturesUsda(mat, tex_dir):
     scn = CreateSceneComposite()
     principled = GetPrincipledShader(mat)
     shader = usda_shader.UsdaShader()
-    
+
     # shader parameter
     CompositeTree(tex_dir, scn, mat, shader.diffuseColor, principled.inputs['Base Color'], 'diffuseColor')
     CompositeTree(tex_dir, scn, mat, shader.emissiveColor, principled.inputs['Emission'], 'emissiveColor')
