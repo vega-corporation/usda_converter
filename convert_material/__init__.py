@@ -14,6 +14,7 @@ else:
     from . import color_function
 
 import bpy
+from .. import keywords
 from .. import usda_shader
 import os
 
