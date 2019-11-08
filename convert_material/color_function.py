@@ -46,6 +46,7 @@ def ShaderNodeValue(extree, mat_node):
 def ShaderNodeMixRGB(extree, mat_node):
     node = extree.AddNode('CompositorNodeMixRGB')
     node.blend_type = mat_node.blend_type
+    node.use_clamp = mat_node.use_clamp
     comp = utils.CompositeNode(node)
     for i in range(len(node.inputs)):
         comp.AddInputs(node.inputs[i], mat_node.inputs[i])
@@ -193,4 +194,97 @@ def ShaderNodeDisplacement(extree, mat_node):
     comp = utils.CompositeNode(node)
     comp.AddInputs(node.inputs[0], mat_node.inputs[3])
     comp.AddOutputs(node.outputs[0], mat_node.outputs[0])
+    return comp
+
+
+# converter
+
+def ShaderNodeValToRGB(extree, mat_node):
+    node = extree.AddNode('CompositorNodeValToRGB')
+    node.color_ramp.color_mode = mat_node.color_ramp.color_mode
+    node.color_ramp.interpolation = mat_node.color_ramp.interpolation
+    elements = node.color_ramp.elements
+    elements.remove(elements[1])
+    for i, element in enumerate(mat_node.color_ramp.elements):
+        if len(node.color_ramp.elements) == i:
+            node.color_ramp.elements.new(1.0)
+        node.color_ramp.elements[i].color = element.color
+        node.color_ramp.elements[i].position = element.position
+    comp = utils.CompositeNode(node)
+    for i in range(len(node.inputs)):
+        comp.AddInputs(node.inputs[i], mat_node.inputs[i])
+    for i in range(len(node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeCombineHSV(extree, mat_node):
+    node = extree.AddNode('CompositorNodeCombHSVA')
+    comp = utils.CompositeNode(node)
+    for i in range(3):
+        comp.AddInputs(node.inputs[i], mat_node.inputs[i])
+    for i in range(len(node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeCombineRGB(extree, mat_node):
+    node = extree.AddNode('CompositorNodeCombRGBA')
+    comp = utils.CompositeNode(node)
+    for i in range(3):
+        comp.AddInputs(node.inputs[i], mat_node.inputs[i])
+    for i in range(len(node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeCombineXYZ(extree, mat_node):
+    node = extree.AddNode('CompositorNodeCombRGBA')
+    comp = utils.CompositeNode(node)
+    for i in range(3):
+        comp.AddInputs(node.inputs[i], mat_node.inputs[i])
+    for i in range(len(node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeMath(extree, mat_node):
+    node = extree.AddNode('CompositorNodeMath')
+    node.operation = mat_node.operation
+    node.use_clamp = mat_node.use_clamp
+    comp = utils.CompositeNode(node)
+    for i in range(len(node.inputs)):
+        comp.AddInputs(node.inputs[i], mat_node.inputs[i])
+    for i in range(len(node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeRGBToBW(extree, mat_node):
+    node = extree.AddNode('CompositorNodeRGBToBW')
+    comp = utils.CompositeNode(node)
+    for i in range(len(node.inputs)):
+        comp.AddInputs(node.inputs[i], mat_node.inputs[i])
+    for i in range(len(node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeSeparateHSV(extree, mat_node):
+    node = extree.AddNode('CompositorNodeSepHSVA')
+    comp = utils.CompositeNode(node)
+    for i in range(len(node.inputs)):
+        comp.AddInputs(node.inputs[i], mat_node.inputs[i])
+    for i in range(len(mat_node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeSeparateRGB(extree, mat_node):
+    node = extree.AddNode('CompositorNodeSepRGBA')
+    comp = utils.CompositeNode(node)
+    for i in range(len(node.inputs)):
+        comp.AddInputs(node.inputs[i], mat_node.inputs[i])
+    for i in range(3):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
     return comp
