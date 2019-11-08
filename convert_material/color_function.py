@@ -113,3 +113,84 @@ def ShaderNodeRGBCurve(extree, mat_node):
         comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
     return comp
 
+
+# vector
+
+def ShaderNodeNormalMap(extree, mat_node):
+    node = extree.AddNode('CompositorNodeMixRGB')
+    node.blend_type = 'MIX'
+    strength = mat_node.inputs[0].default_value
+    strength = 1.0 if strength > 1.0 else strength
+    node.inputs[0].default_value = strength*strength
+    node.inputs[1].default_value = (0.5, 0.5, 1.0, 1.0)
+    comp = utils.CompositeNode(node)
+    comp.AddInputs(node.inputs[2], mat_node.inputs[1])
+    for i in range(len(node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeNormal(extree, mat_node):
+    node = extree.AddNode('CompositorNodeNormal')
+    comp = utils.CompositeNode(node)
+    for i in range(len(node.inputs)):
+        comp.AddInputs(node.inputs[i], mat_node.inputs[i])
+    for i in range(len(node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeVectorCurve(extree, mat_node):
+    node = extree.AddNode('CompositorNodeCurveVec')
+    for i, mat_curve in enumerate(mat_node.mapping.curves):
+        comp_curve = node.mapping.curves[i]
+        for i, mat_point in enumerate(mat_curve.points):
+            if len(comp_curve.points) == i:
+                comp_curve.points.new(mat_point.location.x, mat_point.location.y)
+            comp_curve.points[i].location = mat_point.location
+    comp = utils.CompositeNode(node)
+    comp.AddInputs(node.inputs[0], mat_node.inputs[1])
+    for i in range(len(node.outputs)):
+        comp.AddOutputs(node.outputs[i], mat_node.outputs[i])
+    return comp
+
+
+def ShaderNodeMapping(extree, mat_node):
+    node = extree.AddNode('CompositorNodeCurveVec')
+    comp = utils.CompositeNode(node)
+    comp.AddInputs(node.inputs[0], mat_node.inputs[0])
+    comp.AddOutputs(node.outputs[0], mat_node.outputs[0])
+    return comp
+
+
+def ShaderNodeVectorTransform(extree, mat_node):
+    node = extree.AddNode('CompositorNodeCurveVec')
+    comp = utils.CompositeNode(node)
+    comp.AddInputs(node.inputs[0], mat_node.inputs[0])
+    comp.AddOutputs(node.outputs[0], mat_node.outputs[0])
+    return comp
+
+
+def ShaderNodeVectorDisplacement(extree, mat_node):
+    node = extree.AddNode('CompositorNodeMixRGB')
+    node.inputs[0].default_value = 0.0
+    comp = utils.CompositeNode(node)
+    comp.AddInputs(node.inputs[1], mat_node.inputs[0])
+    comp.AddOutputs(node.outputs[0], mat_node.outputs[0])
+    return comp
+
+
+def ShaderNodeBump(extree, mat_node):
+    node = extree.AddNode('CompositorNodeCurveVec')
+    comp = utils.CompositeNode(node)
+    comp.AddInputs(node.inputs[0], mat_node.inputs[3])
+    comp.AddOutputs(node.outputs[0], mat_node.outputs[0])
+    return comp
+
+
+def ShaderNodeDisplacement(extree, mat_node):
+    node = extree.AddNode('CompositorNodeCurveVec')
+    comp = utils.CompositeNode(node)
+    comp.AddInputs(node.inputs[0], mat_node.inputs[3])
+    comp.AddOutputs(node.outputs[0], mat_node.outputs[0])
+    return comp

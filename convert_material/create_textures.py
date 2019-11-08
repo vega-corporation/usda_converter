@@ -129,8 +129,10 @@ def CreateTexturesUsda(mat, tex_dir):
     CompositeTree(tex_dir, scn, mat, shader.clearcoatRoughness, principled.inputs['Clearcoat Roughness'], 'clearcoatRoughness')
     CompositeTree(tex_dir, scn, mat, shader.opacity, principled.inputs['Alpha'], 'opacity')
     CompositeTree(tex_dir, scn, mat, shader.ior, principled.inputs['IOR'], 'ior')
-    CompositeTree(tex_dir, scn, mat, shader.normal, principled.inputs['Normal'], 'normal')
-    CompositeTree(tex_dir, scn, mat, shader.displacement, principled.outputs['BSDF'].links[0].to_node.inputs['Displacement'], 'displacement')
+    if principled.outputs['BSDF'].links[0].to_node.inputs['Displacement'].links:
+        CompositeTree(tex_dir, scn, mat, shader.normal, principled.outputs['BSDF'].links[0].to_node.inputs['Displacement'], 'displacement')
+    else:
+        CompositeTree(tex_dir, scn, mat, shader.normal, principled.inputs['Normal'], 'normal')
 
     # delete scene
     bpy.data.scenes.remove(scn)
