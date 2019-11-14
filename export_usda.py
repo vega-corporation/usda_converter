@@ -9,18 +9,101 @@ from . import target
 
 
 
-def usd_obj_name(name):
+def Rename(name):
     usd_name = name.replace(",", "_").replace(".", "_").replace("-", "_").replace(" ", "")
     if len(name) > 0 and name[0].isdecimal():
         usd_name = "_"+usd_name
     return usd_name
 
 
+
+def UsdaInit():
+    scn = bpy.context.scene
+    usda = """#usda 1.0
+(
+    defaultPrim = "Objects"""+'"'
+
+    if target.keywords["use_animation"]:
+        usda += """
+    startTimeCode = """+str(scn.frame_start)+"""
+    endTimeCode = """+str(scn.frame_end)+"""
+    timeCodesPerSecond = """+str(60.0*scn.render.frame_map_old/scn.render.frame_map_new)
+
+    usda += """
+    upAxis = "Z"
+)"""
+    return usda
+
+
+
+def UsdaObjects(objects):
+    usda = """
+
+def Scope "Objects"
+{"""
+    for obj in objects:
+        usda += """
+    def Xform """+'"'+Rename(obj.name)+'"'+"""
+    {
+        double3 xformOp:translate = """+str(tuple(np.array(obj.location)*100))+"""
+        float3 xformOp:rotateXYZ = """+str(tuple(np.array(obj.rotation_euler)*180/np.pi))+"""
+        float3 xformOp:scale = """+str(tuple(obj.scale))+"""
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+        def SkelRoot "skelroot"""+'"'
+
+        for mod in obj.modifiers:
+            if mod.bl_rna.identifier == 'ArmatureModifier':
+                usda += """(
+            payload = </Armatures/"""+Rename(mod.object.name)+""">
+        )"""
+                break
+
+        usda += """
+        {
+            def Mesh "mesh"(
+                payload = </Meshes/"""+Rename(obj.data.name)+""">
+            )
+            {"""
+        
+        # get material ids
+        mat_indices = { ms.material.name : [] for ms in obj.material_slots }
+        if obj.material_slots:
+            for i, poly in enumerate( obj.data.polygons ):
+                mat_indices[ obj.material_slots[ poly.material_index ].name ].append( i )
+
+
+        mat_names = [ms.material.name for ms in obj.material_slots]
+        mat_names = tuple(set(mat_names))
+        for mat_name in mat_names:
+            usda += """
+                def GeomSubset """+'"'+Rename(mat_name)+'"'+"""
+                {
+                    uniform token elementType = "face"
+                    uniform token familyName = "materialBind"
+                    int[] indices = """+str(mat_indices[mat_name])+"""
+                    rel material:binding = </Materials/"""+Rename(mat_name)+""">
+                }"""
+        usda += """
+            }
+        }
+    }"""
+    usda += """
+}"""
+    return usda
+
+
+
 def ConvertUsdaMeshes(objects, usda_meshes):
-    usda = ""
+    usda = """
+
+def Scope "Meshes"
+{
+    float3 xformOp:scale = (100, 100, 100)
+    uniform token[] xformOpOrder = ["xformOp:scale"]"""
+
     for obj in objects:
         usda_mesh = usda_meshes[obj.data.name]
-        mesh_name = usd_obj_name(obj.name)
+        mesh_name = Rename(obj.data.name)
 
         extent = [tuple(np.array(obj.bound_box[0])*100), tuple(np.array(obj.bound_box[6])*100)]
 
@@ -30,79 +113,43 @@ def ConvertUsdaMeshes(objects, usda_meshes):
         normals = usda_mesh.normal
         normals_indices = usda_mesh.normal_indices
 
-        # translate object for usda
-        # translate = tuple(np.array([obj.location[0], obj.location[1], obj.location[2]])*100)
-        # rotateXYZ = (obj.rotation_euler[0]*180/np.pi, obj.rotation_euler[1]*180/np.pi, obj.rotation_euler[2]*180/np.pi)
-        # scale = tuple(obj.scale)
-
         usda += """
 
-def Mesh """+'"'+mesh_name+'"'+"""
-{
-    float3[] extent = """+str(extent)+"""
-    int[] faceVertexCounts = """+str(faceVertexCounts)+"""
-    int[] faceVertexIndices = """+str(faceVertexIndices)+"""
-    point3f[] points = """+points+"""
-    normal3f[] primvars:normals = """+normals+""" (
-        interpolation = "faceVarying"
-    )
-    int[] primvars:normals:indices = """+normals_indices
-    
+    def """+'"'+mesh_name+'"'+"""
+    {
+        float3[] extent = """+str(extent)+"""
+        int[] faceVertexCounts = """+str(faceVertexCounts)+"""
+        int[] faceVertexIndices = """+str(faceVertexIndices)+"""
+        point3f[] points = """+points+"""
+        normal3f[] primvars:normals = """+normals+""" (
+            interpolation = "faceVarying"
+        )
+        int[] primvars:normals:indices = """+normals_indices
+        
         if usda_mesh.uv:
             usda += """
-    texCoord2f[] primvars:uv = """+usda_mesh.uv+""" (
-        interpolation = "faceVarying"
-    )
-    int[] primvars:uv:indices = """+usda_mesh.uv_indices
-
-#         usda += """
-#     double3 xformOp:translate = """+str(translate)+"""
-#     float3 xformOp:rotateXYZ = """+str(rotateXYZ)+"""
-#     float3 xformOp:scale = """+str(scale)+"""
-#     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
-
-#     uniform token subdivisionScheme = "none"
-
-# """
-    # Parameters not reflected in usdz
-    # uniform bool doubleSided = 1
-    # uint ambientOcclusionSamples = 5
-    # float cameraLightIntensity = 10
-
-        for i, mat in enumerate(obj.material_slots):
-            # deduplication
-            for ii in range(i):
-                if mat.name == obj.material_slots[ii].name:
-                    break
-            else:
-                mat_name = usd_obj_name(mat.name)
-                usda += """
-    def GeomSubset """+'"'+mat_name+'"'+"""
-    {
-        uniform token elementType = "face"
-        uniform token familyName = "materialBind"
-        int[] indices = """+str(usda_mesh.mat_indices[mat.name])+"""
-        rel material:binding = </Materials/"""+mat_name+""">
-    }"""
+        texCoord2f[] primvars:uv = """+usda_mesh.uv+""" (
+            interpolation = "faceVarying"
+        )
+        int[] primvars:uv:indices = """+usda_mesh.uv_indices
 
         usda += """
-}
+    }"""
 
-
-"""
+    usda += """
+}"""
     return usda
 
 
 
 def ConvertUsdaMaterials(usda_shaders):
-    usda = ""
-    usda += """
+    usda = """
+    
 def "Materials"
 {"""
-
     for mat_name in usda_shaders:
         shader = usda_shaders[mat_name]
-        mat_name = usd_obj_name(mat_name)
+        mat_name = Rename(mat_name)
 
         usda += """
 
