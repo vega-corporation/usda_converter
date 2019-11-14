@@ -36,18 +36,18 @@ def UsdaInit():
 
 
 
-def UsdaObjects(objects):
+def UsdaObjects(usda_meshes):
     usda = """
 
 def Scope "Objects"
 {"""
-    for obj in objects:
+    for obj in target.objects:
         usda += """
     def Xform """+'"'+Rename(obj.name)+'"'+"""
     {
         double3 xformOp:translate = """+str(tuple(np.array(obj.location)*100))+"""
         float3 xformOp:rotateXYZ = """+str(tuple(np.array(obj.rotation_euler)*180/np.pi))+"""
-        float3 xformOp:scale = """+str(tuple(obj.scale))+"""
+        float3 xformOp:scale = """+str(tuple(np.array(obj.scale)*100))+"""
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
         def SkelRoot "skelroot"""+'"'
 
@@ -64,13 +64,6 @@ def Scope "Objects"
                 payload = </Meshes/"""+Rename(obj.data.name)+""">
             )
             {"""
-        
-        # get material ids
-        mat_indices = { ms.material.name : [] for ms in obj.material_slots }
-        if obj.material_slots:
-            for i, poly in enumerate( obj.data.polygons ):
-                mat_indices[ obj.material_slots[ poly.material_index ].name ].append( i )
-
 
         mat_names = [ms.material.name for ms in obj.material_slots]
         mat_names = tuple(set(mat_names))
@@ -80,7 +73,7 @@ def Scope "Objects"
                 {
                     uniform token elementType = "face"
                     uniform token familyName = "materialBind"
-                    int[] indices = """+str(mat_indices[mat_name])+"""
+                    int[] indices = """+str(usda_meshes[obj.data.name].mat_indices[mat_name])+"""
                     rel material:binding = </Materials/"""+Rename(mat_name)+""">
                 }"""
         usda += """
@@ -93,15 +86,13 @@ def Scope "Objects"
 
 
 
-def ConvertUsdaMeshes(objects, usda_meshes):
+def ConvertUsdaMeshes(usda_meshes):
     usda = """
 
 def Scope "Meshes"
-{
-    float3 xformOp:scale = (100, 100, 100)
-    uniform token[] xformOpOrder = ["xformOp:scale"]"""
+{"""
 
-    for obj in objects:
+    for obj in target.objects:
         usda_mesh = usda_meshes[obj.data.name]
         mesh_name = Rename(obj.data.name)
 
@@ -239,10 +230,9 @@ def "Materials"
 
 def ExportUsda(usda_meshes, usda_shaders):
     usda = "#usda 1.0"
-    objects = target.objects
     usda += UsdaInit()
-    usda += UsdaObjects(objects)
-    usda += ConvertUsdaMeshes(objects, usda_meshes)
+    usda += UsdaObjects(usda_meshes)
+    usda += ConvertUsdaMeshes(usda_meshes)
     usda += ConvertUsdaMaterials(usda_shaders)
 
     with open(target.keywords["filepath"], mode="w", encoding="utf-8") as f:
