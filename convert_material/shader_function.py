@@ -3,7 +3,7 @@ import numpy as np
 
 from . import utils
 from .utils import Blend
-from .. import keywords
+from .. import target
 
 
 def Handler(node):
@@ -201,7 +201,7 @@ def ShaderNodeBsdfGlass(node):
     node.shader.alpha = [1.0]
     node.shader.normal = node.inputs['Normal']
     # for usda convert
-    if "filepath" in keywords.key:
+    if "filepath" in target.keywords:
         SetMixRGB(node.shader.alpha, Blend.DIF, 1.0, node.inputs['Color'], [1.0, 1.0, 1.0])
 
 
@@ -212,7 +212,7 @@ def ShaderNodeBsdfTransparent(node):
     node.shader.emission = [0.0, 0.0, 0.0, 1.0]
     SetMixRGB(node.shader.alpha, utils.Blend.SUB, 1.0, [1, 1, 1], node.inputs['Color'])
     # for usda convert
-    if "filepath" in keywords.key:
+    if "filepath" in target.keywords:
         SetMixRGB(node.shader.alpha, Blend.DIF, 1.0, node.inputs['Color'], [1.0, 1.0, 1.0])
 
 

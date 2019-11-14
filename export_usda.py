@@ -5,7 +5,7 @@ import shutil
 
 from . import usda_shader
 from . import usda_mesh
-from . import keywords
+from . import target
 
 
 
@@ -191,22 +191,12 @@ def "Materials"
 
 
 def ExportUsda(objects, usda_meshes, usda_shaders):
-    # export usda
-    scn = bpy.context.scene
-    usda = """#usda 1.0
-("""
-    if keywords.key["use_animation"]:
-        usda += """
-    startTimeCode = """+str(scn.frame_start)+"""
-    endTimeCode = """+str(scn.frame_end)+"""
-    timeCodesPerSecond = """+str(60.0*scn.render.frame_map_new/scn.render.frame_map_old)
-
-    usda += """
-    upAxis = "Z"
-)"""
+    usda = "#usda 1.0"
+    usda += UsdaInit()
+    usda += UsdaObjects(objects)
     usda += ConvertUsdaMeshes(objects, usda_meshes)
     usda += ConvertUsdaMaterials(usda_shaders)
 
-    with open(keywords.key["filepath"], mode="w", encoding="utf-8") as f:
+    with open(target.keywords["filepath"], mode="w", encoding="utf-8") as f:
         f.write(usda)
     

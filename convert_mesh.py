@@ -4,7 +4,7 @@ import math
 import os
 import shutil
 
-from . import keywords
+from . import target
 from . import usda_mesh
 
 
@@ -60,7 +60,7 @@ def GetMeshData(obj):
 
     # uv
     uv_layer = mesh.uv_layers.active
-    if uv_layer and keywords.key["use_uvs"]:
+    if uv_layer and target.keywords["use_uvs"]:
         uv_all = [None]*len(mesh.loops)*2
         uv_layer.data.foreach_get("uv", uv_all)
         uv_all = [float('{:.5f}'.format(n)) for n in uv_all]
@@ -92,7 +92,7 @@ def GetMeshDataAll(objects):
         sub_obj = obj
 
         # apply modifiers
-        if keywords.key["use_mesh_modifiers"]:
+        if target.keywords["use_mesh_modifiers"]:
             depsgraph = bpy.context.evaluated_depsgraph_get()
             sub_obj = obj.evaluated_get(depsgraph)
 

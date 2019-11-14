@@ -3,7 +3,7 @@ import numpy as np
 import shutil
 import os
 
-from .. import keywords
+from .. import target
 from .. import usda_shader
 from . import utils
 from . import color_function
@@ -56,7 +56,7 @@ def CompositeTree(tex_dir, scn, mat, color, socket, name):
     if from_node.type == 'TEX_IMAGE':
         filepath = from_node.image.filepath_from_user()
         if os.path.exists(filepath):
-            if keywords.key["use_new_textures"]:
+            if target.keywords["use_new_textures"]:
                 ext = os.path.splitext(filepath)[1]
                 tex_path = os.path.join(mat_dir, name+ext)
                 os.makedirs(mat_dir, exist_ok=True)
@@ -68,7 +68,7 @@ def CompositeTree(tex_dir, scn, mat, color, socket, name):
                 color_[0].file = filepath
 
     # make composite texture
-    elif keywords.key["use_new_textures"]:
+    elif target.keywords["use_new_textures"]:
         # default render size
         utils.CompositeNode.render_resolution = [32, 32]
         # make composite tree

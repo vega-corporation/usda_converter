@@ -19,13 +19,13 @@ import shutil
 
 if "bpy" in locals():
     import importlib
-    importlib.reload(keywords)
+    importlib.reload(target)
     importlib.reload(usda_shader)
     importlib.reload(convert_material)
     importlib.reload(convert_mesh)
     importlib.reload(export_usda)
 else:
-    from . import keywords
+    from . import target
     from . import usda_shader
     from . import convert_material
     from . import convert_mesh
@@ -82,18 +82,12 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
 
     check_extension = True
 
-
     def execute(self, context):
-        keywords.SetKeywords(self.as_keywords())
-
-        # target objects
-        objects = [obj for obj in bpy.data.objects if obj.type == 'MESH']
-        objects = [obj for obj in objects if len(obj.data.polygons) != 0]
-        if keywords.key['use_selection']:
-            objects = [obj for obj in objects if obj.select_get()]
+        target.SetTargets(self.as_keywords())
+        objects = target.objects
 
         # get usda shader and mesh
-        tex_dir = os.path.splitext(keywords.key["filepath"])[0] + '_textures'
+        tex_dir = os.path.splitext(target.keywords["filepath"])[0] + '_textures'
         usda_meshes = convert_mesh.GetMeshDataAll(objects)
         usda_shaders = convert_material.ConvertMaterialUsda(tex_dir, objects)
         

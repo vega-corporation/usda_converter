@@ -14,7 +14,7 @@ else:
     from . import color_function
 
 import bpy
-from .. import keywords
+from .. import target
 from .. import usda_shader
 import os
 
@@ -23,7 +23,7 @@ import os
 
 def ConvertMaterialUsda(tex_dir, objects):
     # make dir
-    if keywords.key["use_new_textures"]:
+    if target.keywords["use_new_textures"]:
         os.makedirs(tex_dir, exist_ok=True)
     
     # target materials
