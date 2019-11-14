@@ -84,11 +84,11 @@ def GetMeshData(obj):
 
 
 
-def GetMeshDataAll(objects):
+def GetMeshDataAll():
     usda_meshes = {}
 
     # get original objects mesh
-    for obj in objects:
+    for obj in target.objects:
         sub_obj = obj
 
         # apply modifiers

@@ -190,8 +190,9 @@ def "Materials"
 
 
 
-def ExportUsda(objects, usda_meshes, usda_shaders):
+def ExportUsda(usda_meshes, usda_shaders):
     usda = "#usda 1.0"
+    objects = target.objects
     usda += UsdaInit()
     usda += UsdaObjects(objects)
     usda += ConvertUsdaMeshes(objects, usda_meshes)

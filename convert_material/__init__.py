@@ -21,14 +21,14 @@ import os
 
 
 
-def ConvertMaterialUsda(tex_dir, objects):
+def ConvertMaterialUsda(tex_dir):
     # make dir
     if target.keywords["use_new_textures"]:
         os.makedirs(tex_dir, exist_ok=True)
     
     # target materials
     materials = []
-    for obj in objects:
+    for obj in target.objects:
         for mat in obj.material_slots:
             if mat.material not in materials:
                 materials.append(mat.material)
