@@ -23,14 +23,14 @@ def UsdaInit():
 (
     defaultPrim = "Objects"""+'"'
 
-    if target.keywords["use_animation"]:
+    if target.keywords["include_animation"]:
         usda += """
     startTimeCode = """+str(scn.frame_start)+"""
     endTimeCode = """+str(scn.frame_end)+"""
     timeCodesPerSecond = """+str(60.0*scn.render.frame_map_old/scn.render.frame_map_new)
 
     usda += """
-    upAxis = "Z"
+    upAxis = """+'"'+target.keywords["up_axis"]+'"'+"""
 )"""
     return usda
 

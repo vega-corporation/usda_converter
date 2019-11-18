@@ -35,6 +35,8 @@ import bpy
 from bpy.props import (
         BoolProperty,
         StringProperty,
+        FloatProperty,
+        EnumProperty,
         )
 from bpy_extras.io_utils import (
         ExportHelper,
@@ -59,17 +61,17 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             description="Export selected objects only",
             default=False,
             )
-    use_animation: BoolProperty(
-            name="Animation",
+    include_animation: BoolProperty(
+            name="Include　Animation",
             description="Write out an OBJ for each frame",
             default=True,
             )
-    use_mesh_modifiers: BoolProperty(
+    apply_modifiers: BoolProperty(
             name="Apply Modifiers",
             description="Apply modifiers",
             default=True,
             )
-    use_uvs: BoolProperty(
+    include_uvs: BoolProperty(
             name="Include UVs",
             description="Write out the active UV coordinates",
             default=True,
@@ -79,6 +81,26 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             description="Write out the textures file",
             default=True,
             )
+    up_axis: EnumProperty(
+            name="Axis",# USD can specify Y or Z axis
+            items=( ('Z', "Z Up Y Forward", ""),
+                    ('Y', "Y Up -Z Forward", ""),
+                  ),
+            default='Z',
+            )
+
+    def draw(self, context):
+        layout = self.layout
+        main_col = self.layout.box().column()
+        main_col.prop(self, "use_selection")
+        main_col.prop(self, "up_axis")
+        mesh_col = self.layout.box().column()
+        mesh_col.prop(self, "include_animation")
+        mesh_col.prop(self, "apply_modifiers")
+        mesh_col.prop(self, "include_uvs")
+        tex_col = self.layout.box().column()
+        tex_col.prop(self, "use_new_textures")
+    
 
     check_extension = True
 
