@@ -95,10 +95,12 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
         main_col.prop(self, "use_selection")
         main_col.prop(self, "up_axis")
         mesh_col = self.layout.box().column()
+        mesh_col.label(text="Mesh:", icon='MESH_DATA')
         mesh_col.prop(self, "include_animation")
         mesh_col.prop(self, "apply_modifiers")
         mesh_col.prop(self, "include_uvs")
         tex_col = self.layout.box().column()
+        tex_col.label(text="Texture:", icon='TEXTURE_DATA')
         tex_col.prop(self, "use_new_textures")
     
 
