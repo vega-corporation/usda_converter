@@ -11,7 +11,7 @@ def SetTargets(key):
     keywords = key
 
     objects = [obj for obj in bpy.data.objects if obj.type == 'MESH' and obj.data.polygons]
-    if key['use_selection']:
+    if key['selection_only']:
         objects = [obj for obj in objects if obj.select_get()]
     objects = tuple(objects)
     

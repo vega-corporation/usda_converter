@@ -56,30 +56,10 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    use_selection: BoolProperty(
+    selection_only: BoolProperty(
             name="Selection Only",
             description="Export selected objects only",
             default=False,
-            )
-    include_animation: BoolProperty(
-            name="Include　Animation",
-            description="Write out an OBJ for each frame",
-            default=True,
-            )
-    apply_modifiers: BoolProperty(
-            name="Apply Modifiers",
-            description="Apply modifiers",
-            default=True,
-            )
-    include_uvs: BoolProperty(
-            name="Include UVs",
-            description="Write out the active UV coordinates",
-            default=True,
-            )
-    use_new_textures: BoolProperty(
-            name="Write Textures",
-            description="Write out the textures file",
-            default=True,
             )
     up_axis: EnumProperty(
             name="Axis",# USD can specify Y or Z axis
@@ -88,20 +68,43 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
                   ),
             default='Z',
             )
+    include_uvs: BoolProperty(
+            name="Include UVs",
+            description="Write out the active UV coordinates",
+            default=True,
+            )
+    apply_modifiers: BoolProperty(
+            name="Apply Modifiers",
+            description="Apply modifiers",
+            default=True,
+            )
+    include_armatures: BoolProperty(
+            name="Include Armatures",
+            description="Write out the Armatures",
+            default=True,
+            )
+    make_new_textures: BoolProperty(
+            name="Make New Textures",
+            description="Generate the new textures from shader data",
+            default=True,
+            )
+            
 
     def draw(self, context):
         layout = self.layout
         main_col = self.layout.box().column()
-        main_col.prop(self, "use_selection")
+        main_col.prop(self, "selection_only")
         main_col.prop(self, "up_axis")
         mesh_col = self.layout.box().column()
         mesh_col.label(text="Mesh:", icon='MESH_DATA')
-        mesh_col.prop(self, "include_animation")
-        mesh_col.prop(self, "apply_modifiers")
         mesh_col.prop(self, "include_uvs")
+        mesh_col.prop(self, "apply_modifiers")
+        arm_col = self.layout.box().column()
+        arm_col.label(text="Armature:", icon='ARMATURE_DATA')
+        arm_col.prop(self, "include_armatures")
         tex_col = self.layout.box().column()
         tex_col.label(text="Texture:", icon='TEXTURE_DATA')
-        tex_col.prop(self, "use_new_textures")
+        tex_col.prop(self, "make_new_textures")
     
 
     check_extension = True

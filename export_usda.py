@@ -23,7 +23,7 @@ def UsdaInit():
 (
     defaultPrim = "Objects"""+'"'
 
-    if target.keywords["include_animation"]:
+    if target.keywords["include_armatures"]:
         usda += """
     startTimeCode = """+str(scn.frame_start)+"""
     endTimeCode = """+str(scn.frame_end)+"""
@@ -45,14 +45,14 @@ def Scope "Objects"
         usda += """
     def Xform """+'"'+Rename(obj.name)+'"'+"""
     {
-        double3 xformOp:translate = """+str(tuple(np.array(obj.location)*100))+"""
+        double3 xformOp:translate = """+str(tuple(obj.location))+"""
         float3 xformOp:rotateXYZ = """+str(tuple(np.array(obj.rotation_euler)*180/np.pi))+"""
-        float3 xformOp:scale = """+str(tuple(np.array(obj.scale)*100))+"""
+        float3 xformOp:scale = """+str(tuple(obj.scale))+"""
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
         def SkelRoot "skelroot"""+'"'
 
         # references skel and mesh
-        # payload is not supported usdzconverter 0.61
+        # payload is not supported by usdzconverter 0.61
         for mod in obj.modifiers:
             if mod.bl_rna.identifier == 'ArmatureModifier':
                 usda += """(

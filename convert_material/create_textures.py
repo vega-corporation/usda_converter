@@ -56,7 +56,7 @@ def CompositeTree(tex_dir, scn, mat, color, socket, name):
     if from_node.type == 'TEX_IMAGE':
         filepath = from_node.image.filepath_from_user()
         if os.path.exists(filepath):
-            if target.keywords["use_new_textures"]:
+            if target.keywords["make_new_textures"]:
                 ext = os.path.splitext(filepath)[1]
                 tex_path = os.path.join(mat_dir, name+ext)
                 os.makedirs(mat_dir, exist_ok=True)
@@ -68,7 +68,7 @@ def CompositeTree(tex_dir, scn, mat, color, socket, name):
                 color_[0].file = filepath
 
     # make composite texture
-    elif target.keywords["use_new_textures"]:
+    elif target.keywords["make_new_textures"]:
         # default render size
         utils.CompositeNode.render_resolution = [32, 32]
         # make composite tree
