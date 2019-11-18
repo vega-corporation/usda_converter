@@ -51,17 +51,19 @@ def Scope "Objects"
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
         def SkelRoot "skelroot"""+'"'
 
+        # references skel and mesh
+        # payload is not supported usdzconverter 0.61
         for mod in obj.modifiers:
             if mod.bl_rna.identifier == 'ArmatureModifier':
                 usda += """(
-            payload = </Armatures/"""+Rename(mod.object.name)+""">
+            references = </Armatures/"""+Rename(mod.object.name)+""">
         )"""
                 break
-
+        
         usda += """
         {
             def Mesh "mesh"(
-                payload = </Meshes/"""+Rename(obj.data.name)+""">
+                references = </Meshes/"""+Rename(obj.data.name)+""">
             )
             {"""
 
