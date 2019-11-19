@@ -112,12 +112,12 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         target.SetTargets(self.as_keywords())
 
-        # get usda shader and mesh
+        # get usda mesh and material
         usda_meshes = convert_mesh.ConvertMeshUsda()
-        usda_shaders = convert_material.ConvertMaterialUsda()
+        usda_materials = convert_material.ConvertMaterialUsda()
         
         # export usda
-        export_usda.ExportUsda(usda_meshes, usda_shaders)
+        export_usda.ExportUsda(usda_meshes, usda_materials)
 
         return {'FINISHED'}
 
