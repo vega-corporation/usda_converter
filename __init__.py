@@ -113,9 +113,8 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
         target.SetTargets(self.as_keywords())
 
         # get usda shader and mesh
-        tex_dir = os.path.splitext(target.keywords["filepath"])[0] + '_assets'
-        usda_meshes = convert_mesh.GetMeshDataAll()
-        usda_shaders = convert_material.ConvertMaterialUsda(tex_dir)
+        usda_meshes = convert_mesh.ConvertMeshUsda()
+        usda_shaders = convert_material.ConvertMaterialUsda()
         
         # export usda
         export_usda.ExportUsda(usda_meshes, usda_shaders)

@@ -21,10 +21,10 @@ import os
 
 
 
-def ConvertMaterialUsda(tex_dir):
+def ConvertMaterialUsda():
     # make dir
     if target.keywords["make_new_textures"]:
-        os.makedirs(tex_dir, exist_ok=True)
+        os.makedirs(target.tex_dir, exist_ok=True)
     
     # target materials
     materials = []

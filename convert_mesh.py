@@ -25,12 +25,7 @@ def MeshTriangulate(me):
 
 
 
-def ConvertUsdaMeshes():
-    pass
-
-
-
-def GetMeshData(mesh, name):
+def ConvertMeshDataUsda(mesh, name):
     # get vertex
     faceVertexCounts = [None]*len(mesh.polygons)
     mesh.polygons.foreach_get("loop_total", faceVertexCounts)
@@ -84,7 +79,6 @@ def GetMeshData(mesh, name):
     extent = [tuple(np.min(extent, axis=0)), tuple(np.max(extent, axis=0))]
 
     usda = """
-
     def """+'"'+Rename(name)+'"'+"""
     {
         float3[] extent = """+str(extent)+"""
@@ -120,7 +114,7 @@ def GetMeshData(mesh, name):
 
 
 
-def GetMeshDataAll():
+def ConvertMeshUsda():
     usda = """
 
 def Scope "Meshes"
@@ -156,7 +150,7 @@ def Scope "Meshes"
         MeshTriangulate(me)
 
         # get mesh data
-        usda += GetMeshData(me, name)
+        usda += ConvertMeshDataUsda(me, name)
 
         # clear
         ob_for_convert.to_mesh_clear()
