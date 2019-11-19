@@ -1,5 +1,6 @@
 
 import bpy
+import os
 
 
 def SetTargets(key):
@@ -7,6 +8,7 @@ def SetTargets(key):
     global objects
     global meshes
     global armatures
+    global asset_dir
 
     keywords = key
 
@@ -23,3 +25,5 @@ def SetTargets(key):
             if mod.bl_rna.identifier == 'ArmatureModifier':
                 armatures.append(mod.object)
     armatures = tuple(set(armatures))
+
+    asset_dir = os.path.splitext(key["filepath"])[0] + '_assets'

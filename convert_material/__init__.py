@@ -24,7 +24,7 @@ import os
 def ConvertMaterialUsda():
     # make dir
     if target.keywords["make_new_textures"]:
-        os.makedirs(target.tex_dir, exist_ok=True)
+        os.makedirs(target.asset_dir, exist_ok=True)
     
     # target materials
     materials = []
@@ -45,6 +45,6 @@ def ConvertMaterialUsda():
         tree = create_shader_tree.CreateShaderTree(mat)
         
         # composit color
-        shader_data[mat.name] = create_textures.CreateTexturesUsda(mat, tex_dir)
+        shader_data[mat.name] = create_textures.CreateTexturesUsda(mat)
     
     return shader_data
