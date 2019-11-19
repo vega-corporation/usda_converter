@@ -27,3 +27,11 @@ def SetTargets(key):
     armatures = tuple(set(armatures))
 
     asset_dir = os.path.splitext(key["filepath"])[0] + '_assets'
+
+
+
+def Rename(name):
+    usd_name = name.replace(",", "_").replace(".", "_").replace("-", "_").replace(" ", "")
+    if len(name) > 0 and name[0].isdecimal():
+        usd_name = "_"+usd_name
+    return usd_name

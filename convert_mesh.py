@@ -5,14 +5,9 @@ import os
 import shutil
 
 from . import target
+from .target import Rename
 
 
-
-def Rename(name):
-    usd_name = name.replace(",", "_").replace(".", "_").replace("-", "_").replace(" ", "")
-    if len(name) > 0 and name[0].isdecimal():
-        usd_name = "_"+usd_name
-    return usd_name
 
 
 def MeshTriangulate(me):
@@ -54,6 +49,7 @@ def ConvertMeshDataUsda(mesh, name):
     normals_indices = list(normals_indices)
 
     # uv
+    uv = None
     uv_layer = mesh.uv_layers.active
     if uv_layer and target.keywords["include_uvs"]:
         uv_all = [None]*len(mesh.loops)*2

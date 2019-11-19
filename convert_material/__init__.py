@@ -15,15 +15,11 @@ else:
 
 import bpy
 from .. import target
+from ..target import Rename
 from .. import usda_shader
 import os
 
 
-def Rename(name):
-    usd_name = name.replace(",", "_").replace(".", "_").replace("-", "_").replace(" ", "")
-    if len(name) > 0 and name[0].isdecimal():
-        usd_name = "_"+usd_name
-    return usd_name
 
 
 def ConvertMaterial():
