@@ -44,14 +44,14 @@ def Scope "Objects"
         usda += """
     def Xform """+'"'+Rename(obj.name)+'"'+"""
     {
-        double3 xformOp:translate = """+str(tuple(obj.location))+"""
+        double3 xformOp:translate = """+str(tuple(np.array(obj.location)*100))+"""
         float3 xformOp:rotateXYZ = """+str(tuple(np.array(obj.rotation_euler)*180/np.pi))+"""
         float3 xformOp:scale = """+str(tuple(obj.scale))+"""
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
         def SkelRoot "skelroot"""+'"'
 
         # references skel and mesh
-        # payload is not supported by usdzconverter 0.61
+        # payload or references other files are not supported by usdzconverter 0.61
         for mod in obj.modifiers:
             if mod.bl_rna.identifier == 'ArmatureModifier':
                 usda += """(
@@ -59,75 +59,25 @@ def Scope "Objects"
         )"""
                 break
         
+        mesh_name = obj.name if target.keywords["apply_modifiers"] else obj.data.name
+        
         usda += """
         {
             def Mesh "mesh"(
-                references = </Meshes/"""+Rename(obj.data.name)+""">
+                references = </Meshes/"""+Rename(mesh_name)+""">
             )
             {"""
 
-        mat_names = [ms.material.name for ms in obj.material_slots]
-        mat_names = tuple(set(mat_names))
-        for mat_name in mat_names:
+        for i, material_slot in enumerate(obj.material_slots):
             usda += """
-                def GeomSubset """+'"'+Rename(mat_name)+'"'+"""
+                def GeomSubset """+'"'+"mat_"+str(i).zfill(4)+'"'+"""
                 {
-                    uniform token elementType = "face"
-                    uniform token familyName = "materialBind"
-                    int[] indices = """+str(usda_meshes[obj.data.name].mat_indices[mat_name])+"""
-                    rel material:binding = </Materials/"""+Rename(mat_name)+""">
+                    rel material:binding = </Materials/"""+Rename(material_slot.name)+""">
                 }"""
         usda += """
             }
         }
     }"""
-    usda += """
-}"""
-    return usda
-
-
-
-def ConvertUsdaMeshes(usda_meshes):
-    usda = """
-
-def Scope "Meshes"
-{"""
-
-    for obj in target.objects:
-        usda_mesh = usda_meshes[obj.data.name]
-        mesh_name = Rename(obj.data.name)
-
-        extent = [tuple(np.array(obj.bound_box[0])*100), tuple(np.array(obj.bound_box[6])*100)]
-
-        faceVertexCounts = usda_mesh.faceVertexCounts
-        faceVertexIndices = usda_mesh.faceVertexIndices
-        points = usda_mesh.points
-        normals = usda_mesh.normal
-        normals_indices = usda_mesh.normal_indices
-
-        usda += """
-
-    def """+'"'+mesh_name+'"'+"""
-    {
-        float3[] extent = """+str(extent)+"""
-        int[] faceVertexCounts = """+str(faceVertexCounts)+"""
-        int[] faceVertexIndices = """+str(faceVertexIndices)+"""
-        point3f[] points = """+points+"""
-        normal3f[] primvars:normals = """+normals+""" (
-            interpolation = "faceVarying"
-        )
-        int[] primvars:normals:indices = """+normals_indices
-        
-        if usda_mesh.uv:
-            usda += """
-        texCoord2f[] primvars:uv = """+usda_mesh.uv+""" (
-            interpolation = "faceVarying"
-        )
-        int[] primvars:uv:indices = """+usda_mesh.uv_indices
-
-        usda += """
-    }"""
-
     usda += """
 }"""
     return usda
