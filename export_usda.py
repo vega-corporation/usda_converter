@@ -4,7 +4,6 @@ import os
 import shutil
 
 from . import usda_shader
-from . import usda_mesh
 from . import target
 
 
@@ -36,7 +35,7 @@ def UsdaInit():
 
 
 
-def UsdaObjects(usda_meshes):
+def UsdaObjects():
     usda = """
 
 def Scope "Objects"
@@ -233,8 +232,8 @@ def "Materials"
 def ExportUsda(usda_meshes, usda_shaders):
     usda = "#usda 1.0"
     usda += UsdaInit()
-    usda += UsdaObjects(usda_meshes)
-    usda += ConvertUsdaMeshes(usda_meshes)
+    usda += UsdaObjects()
+    usda += usda_meshes
     usda += ConvertUsdaMaterials(usda_shaders)
 
     with open(target.keywords["filepath"], mode="w", encoding="utf-8") as f:

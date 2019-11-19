@@ -1,16 +1,15 @@
 import bpy
+import bmesh
 import numpy as np
 import math
 import os
 import shutil
 
 from . import target
-from . import usda_mesh
 
 
 # Triangulate（Required for iOS13.）
 def MeshTriangulate(me):
-    import bmesh
     bm = bmesh.new()
     bm.from_mesh(me)
     bmesh.ops.triangulate(bm, faces=bm.faces)
