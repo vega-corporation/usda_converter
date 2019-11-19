@@ -69,7 +69,8 @@ def Scope "Objects"
             {"""
 
         for i, material_slot in enumerate(obj.material_slots):
-            usda += """
+            if material_slot.material:
+                usda += """
                 def GeomSubset """+'"'+"mat_"+str(i).zfill(4)+'"'+"""
                 {
                     rel material:binding = </Materials/"""+Rename(material_slot.name)+""">

@@ -1,20 +1,10 @@
 import bpy
-import bmesh
 import numpy as np
 import math
 import os
 import shutil
 
 from . import target
-
-
-# Triangulate（Required for iOS13.）
-def MeshTriangulate(me):
-    bm = bmesh.new()
-    bm.from_mesh(me)
-    bmesh.ops.triangulate(bm, faces=bm.faces)
-    bm.to_mesh(me)
-    bm.free()
 
 
 
@@ -25,14 +15,22 @@ def Rename(name):
     return usd_name
 
 
+def MeshTriangulate(me):
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.triangulate(bm, faces=bm.faces)
+    bm.to_mesh(me)
+    bm.free()
+
+
 
 def ConvertUsdaMeshes():
     pass
 
 
 
-def GetMeshData(obj, name):
-    mesh = obj.data
+def GetMeshData(mesh, name):
     # get vertex
     faceVertexCounts = [None]*len(mesh.polygons)
     mesh.polygons.foreach_get("loop_total", faceVertexCounts)
@@ -74,13 +72,16 @@ def GetMeshData(obj, name):
         uv_indices = list(uv_indices)
 
     # material indices
-    mat_ids = [ [] for i in range(len(obj.material_slots)) ]
-    if obj.material_slots:
-        for i, poly in enumerate( mesh.polygons ):
-            mat_ids[ poly.material_index ].append( i )
+    mat_ids_all = [None]*len(mesh.polygons)
+    mesh.polygons.foreach_get("material_index", mat_ids_all)
+    mat_ids_all = np.array(mat_ids_all)
+    mat_ids = [ [] for i in range(max(mat_ids_all)+1) ]
+    for i, ids in enumerate(mat_ids):
+        mat_ids[i] = np.where(mat_ids_all == i)[0]
 
-
-    extent = [tuple(obj.bound_box[0]), tuple(obj.bound_box[6])]
+    # bounding box
+    extent = np.array(points)
+    extent = [tuple(np.min(extent, axis=0)), tuple(np.max(extent, axis=0))]
 
     usda = """
 
@@ -102,13 +103,13 @@ def GetMeshData(obj, name):
         )
         int[] primvars:uv:indices = """+str(uv_indices)
 
-    for i, mat_ids in enumerate(mat_ids):
+    for i, ids in enumerate(mat_ids):
         usda += """
         def """+'"'+"mat_"+str(i).zfill(4)+'"'+"""
         {
             uniform token elementType = "face"
             uniform token familyName = "materialBind"
-            int[] indices = """+str(mat_ids)+"""
+            int[] indices = """+str(list(ids))+"""
         }"""
 
     usda += """
@@ -127,35 +128,38 @@ def Scope "Meshes"
 
     # get meshes
     meshes = []
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+
     for obj in target.objects:
-        bm = bmesh.new()
         name = obj.data.name
-        sub_obj = None
-        
+
         if target.keywords["apply_modifiers"]:
+            ob_for_convert = obj.evaluated_get(depsgraph)
             name = obj.name
-            # get preview mesh
-            depsgraph = bpy.context.evaluated_depsgraph_get()
-            sub_obj = obj.evaluated_get(depsgraph)
-            bm.from_mesh(sub_obj.data)
-
-            # invert transform
-            sub_obj.data.transform(np.linalg.inv(obj.matrix_world))
         else:
-            if obj.data not in meshes:
-                sub_obj = obj
-                bm.from_mesh(obj.data)
-                meshes.append(obj.data)
+            if obj.data in meshes:
+                continue
 
-        if sub_obj:
-            # triangulate（fixed for iOS13.）
-            bmesh.ops.triangulate(bm, faces=bm.faces)
+            ob_for_convert = obj.original
+            meshes.append(obj.data)
 
-            # get mesh data
-            bm.to_mesh(sub_obj.data)
-            usda += GetMeshData(sub_obj, name)
+        # ob_for_convert = obj.evaluated_get(depsgraph) if target.keywords["apply_modifiers"] else obj.original
+        try:
+            me = ob_for_convert.to_mesh()
+        except RuntimeError:
+            me = None
 
-        bm.free()
+        if me is None:
+            continue
+
+        # triangulate（fixed for iOS13.）
+        MeshTriangulate(me)
+
+        # get mesh data
+        usda += GetMeshData(me, name)
+
+        # clear
+        ob_for_convert.to_mesh_clear()
     
     usda += """
 }"""

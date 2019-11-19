@@ -10,13 +10,12 @@ def SetTargets(key):
 
     keywords = key
 
-    objects = [obj for obj in bpy.data.objects if obj.type == 'MESH' and obj.data.polygons]
+    scene = bpy.context.scene
     if key['selection_only']:
-        objects = [obj for obj in objects if obj.select_get()]
+        objects = bpy.context.selected_objects
+    else:
+        objects = bpy.context.scene.objects[:]
     objects = tuple(objects)
-    
-    meshes = [obj.to_mesh() for obj in objects]
-    meshes = tuple(set(meshes))
 
     armatures = []
     for obj in objects:

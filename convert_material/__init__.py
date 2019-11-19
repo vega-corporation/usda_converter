@@ -30,7 +30,7 @@ def ConvertMaterialUsda(tex_dir):
     materials = []
     for obj in target.objects:
         for mat in obj.material_slots:
-            if mat.material not in materials:
+            if mat.material and mat.material not in materials:
                 materials.append(mat.material)
 
     # convert materials
