@@ -133,7 +133,6 @@ def Scope "Meshes"
             ob_for_convert = obj.original
             meshes.append(obj.data)
 
-        # ob_for_convert = obj.evaluated_get(depsgraph) if target.keywords["apply_modifiers"] else obj.original
         try:
             me = ob_for_convert.to_mesh()
         except RuntimeError:

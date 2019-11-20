@@ -14,10 +14,7 @@ def UsdaInit():
     scn = bpy.context.scene
     usda = """#usda 1.0
 (
-    defaultPrim = "Objects"""+'"'
-
-    if target.keywords["include_armatures"]:
-        usda += """
+    defaultPrim = "Objects"
     startTimeCode = """+str(scn.frame_start)+"""
     endTimeCode = """+str(scn.frame_end)+"""
     timeCodesPerSecond = """+str(60.0*scn.render.frame_map_old/scn.render.frame_map_new)
@@ -35,12 +32,18 @@ def UsdaObjects():
 def Scope "Objects"
 {"""
     for obj in target.objects:
+
+        if target.keywords["apply_modifiers"]:
+            mat = obj.matrix_world
+        else:
+            mat = obj.matrix_local
+
         usda += """
     def Xform """+'"'+Rename(obj.name)+'"'+"""
     {
-        double3 xformOp:translate = """+str(tuple(np.array(obj.location)*100))+"""
-        float3 xformOp:rotateXYZ = """+str(tuple(np.array(obj.rotation_euler)*180/np.pi))+"""
-        float3 xformOp:scale = """+str(tuple(obj.scale))+"""
+        double3 xformOp:translate = """+str(tuple(np.array(mat.translation)*100))+"""
+        float3 xformOp:rotateXYZ = """+str(tuple(np.array(mat.to_euler())*180/np.pi))+"""
+        float3 xformOp:scale = """+str(tuple(mat.to_scale()))+"""
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
         def SkelRoot "skelroot"""+'"'
 
