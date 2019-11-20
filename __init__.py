@@ -78,6 +78,11 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             description="Apply modifiers",
             default=True,
             )
+    include_animation: BoolProperty(
+            name="Include Animation",
+            description="Write out Animations",
+            default=True,
+            )
     include_armatures: BoolProperty(
             name="Include Armatures",
             description="Write out the Armatures",
@@ -95,13 +100,20 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
         main_col = self.layout.box().column()
         main_col.prop(self, "selection_only")
         main_col.prop(self, "up_axis")
+
         mesh_col = self.layout.box().column()
         mesh_col.label(text="Mesh:", icon='MESH_DATA')
         mesh_col.prop(self, "include_uvs")
         mesh_col.prop(self, "apply_modifiers")
+
+        anim_col = self.layout.box().column()
+        anim_col.label(text="Animation:", icon='ANIM_DATA')
+        anim_col.prop(self, "include_animation")
+
         arm_col = self.layout.box().column()
         arm_col.label(text="Armature:", icon='ARMATURE_DATA')
         arm_col.prop(self, "include_armatures")
+
         tex_col = self.layout.box().column()
         tex_col.label(text="Texture:", icon='TEXTURE_DATA')
         tex_col.prop(self, "make_new_textures")
@@ -111,13 +123,9 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         target.SetTargets(self.as_keywords())
-
-        # get usda mesh and material
-        usda_meshes = convert_mesh.ConvertMeshUsda()
-        usda_materials = convert_material.ConvertMaterialUsda()
         
         # export usda
-        export_usda.ExportUsda(usda_meshes, usda_materials)
+        export_usda.ExportUsda()
 
         return {'FINISHED'}
 
