@@ -110,12 +110,12 @@ def Scope "Objects"
         float3 xformOp:scale.timeSamples = {"""
             for frame, scale in anim_scale:
                 usda += """
-            """+str(frame)+": "+str(tuple(scale))+","
+            """+str(frame)+": "+str(tuple(np.array(scale)*100))+","
             usda += """
         }"""
         else:
             usda += """
-        float3 xformOp:scale = """+str(tuple(mat.to_scale()))
+        float3 xformOp:scale = """+str(tuple(np.array(mat.to_scale())*100))
 
         usda += """
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
@@ -153,7 +153,7 @@ def Scope "Objects"
     usda += """
 }"""
 
-    bpy.context.scene.frame_set(orig_frame)
+    scn.frame_set(orig_frame)
 
     return usda
 

@@ -32,7 +32,7 @@ def ConvertMeshDataUsda(mesh, name):
     points = [None]*len(mesh.vertices)*3
     mesh.vertices.foreach_get("co", points)
     # round units
-    points = [round(n*100,5) for n in points]
+    points = [round(n,5) for n in points]
     # [1,2,3,4,5,6,...] -> [(1,2,3),(4,5,6),...]
     points = list(zip(*[iter(points)]*3))
 
