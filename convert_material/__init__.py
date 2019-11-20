@@ -70,7 +70,6 @@ def "Materials"
     {
         token outputs:displacement.connect = </Materials/"""+mat_name+"""/PBRShader.outputs:displacement>
         token outputs:surface.connect = </Materials/"""+mat_name+"""/PBRShader.outputs:surface>
-        token inputs:frame:stPrimvarName = "uv"
         
         def Shader "PBRShader"
         {
@@ -107,8 +106,8 @@ def "Materials"
         def Shader "PrimvarUv"
         {
             uniform token info:id = "UsdPrimvarReader_float2"
-            float2 inputs:default = (0, 0)
-            token inputs:varname.connect = </Materials/"""+mat_name+""".inputs:frame:stPrimvarName>
+            float2 inputs:fallback = (0, 0)
+            token inputs:varname = """+'"'+'uv'+'"'+"""
             float2 outputs:result
         }"""
 
@@ -123,7 +122,7 @@ def "Materials"
             uniform token info:id = "UsdUVTexture"
             float4 inputs:default = (0, 0, 0, 1)
             asset inputs:file = @"""+usda_texture[0].file+"""@
-            float2 inputs:uv.connect = </Materials/"""+mat_name+"""/PrimvarUv.outputs:result>
+            float2 inputs:st.connect = </Materials/"""+mat_name+"""/PrimvarUv.outputs:result>
             token inputs:wrapS = "repeat"
             token inputs:wrapT = "repeat"
             float3 outputs:"""+output+"""
