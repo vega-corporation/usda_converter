@@ -30,7 +30,7 @@ def Scope "Armatures"
 
     # get armatures
     armatures = []
-    for obj in D.objects:
+    for obj in target.objects:
         for mod in obj.modifiers:
             if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
                 armatures.append(mod.object.data)

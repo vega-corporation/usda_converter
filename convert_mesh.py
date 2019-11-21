@@ -20,7 +20,7 @@ def MeshTriangulate(me):
 
 
 
-def ConvertMeshDataUsda(mesh, name):
+def ConvertMeshDataUsda(mesh):
     # get vertex
     faceVertexCounts = [None]*len(mesh.polygons)
     mesh.polygons.foreach_get("loop_total", faceVertexCounts)
@@ -75,8 +75,6 @@ def ConvertMeshDataUsda(mesh, name):
     extent = [tuple(np.min(extent, axis=0)), tuple(np.max(extent, axis=0))]
 
     usda = """
-    def """+'"'+Rename(name)+'"'+"""
-    {
         float3[] extent = """+str(extent)+"""
         int[] faceVertexCounts = """+str(faceVertexCounts)+"""
         int[] faceVertexIndices = """+str(faceVertexIndices)+"""
@@ -102,9 +100,6 @@ def ConvertMeshDataUsda(mesh, name):
             int[] indices = """+str(list(ids))+"""
         }"""
 
-    usda += """
-    }"""
-
     return usda
 
 
@@ -121,8 +116,8 @@ def Scope "Meshes"
     depsgraph = bpy.context.evaluated_depsgraph_get()
 
     for obj in target.objects:
-        name = obj.data.name
 
+        # include all meshes if apply modifier
         if target.keywords["apply_modifiers"]:
             ob_for_convert = obj.evaluated_get(depsgraph)
             name = obj.name
@@ -132,6 +127,7 @@ def Scope "Meshes"
 
             ob_for_convert = obj.original
             meshes.append(obj.data)
+            name = obj.data.name
 
         try:
             me = ob_for_convert.to_mesh()
@@ -145,8 +141,13 @@ def Scope "Meshes"
         MeshTriangulate(me)
 
         # get mesh data
-        usda += ConvertMeshDataUsda(me, name)
+        usda += """
+    def """+'"'+Rename(name)+'"'+"""
+    {"""
+        usda += ConvertMeshDataUsda(me)
 
+        usda += """
+    }"""
         # clear
         ob_for_convert.to_mesh_clear()
     
