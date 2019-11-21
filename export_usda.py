@@ -60,11 +60,10 @@ def Scope "Objects"
             if scn.frame_start not in frames:
                 frames.insert(0, scn.frame_start)
 
-            # types :'location' or 'scale' or 'rotation_euler'
             act_types = [cur.data_path for cur in action.fcurves]
             anim_location_f = 'location' in act_types
-            anim_rotation_f = 'location' in act_types
-            anim_scale_f = 'location' in act_types
+            anim_rotation_f = 'rotation_euler' in act_types
+            anim_scale_f = 'scale' in act_types
             anim_location = []
             anim_rotation = []
             anim_scale = []
