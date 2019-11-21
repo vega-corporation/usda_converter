@@ -8,6 +8,7 @@ from . import target
 from .target import Rename
 from . import convert_material
 from . import convert_mesh
+from . import convert_armature
 
 
 
@@ -162,6 +163,7 @@ def ExportUsda():
     usda = "#usda 1.0"
     usda += UsdaInit()
     usda += ConvertObjectUsda()
+    usda += convert_armature.ConvertArmatureUsda()
     usda += convert_mesh.ConvertMeshUsda()
     usda += convert_material.ConvertMaterialUsda()
 
