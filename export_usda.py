@@ -43,7 +43,7 @@ def Scope "Objects"
     def Xform """+'"'+Rename(obj.name)+'"'+"""
     {"""
         
-        mat = obj.matrix_world if target.keywords["apply_modifiers"] else obj.matrix_local
+        mat = obj.matrix_world
 
         anim_location_f = False
         anim_rotation_f = False
@@ -73,7 +73,6 @@ def Scope "Objects"
 
             for frame in frames:
                 scn.frame_set(frame)
-                mat = obj.matrix_world if target.keywords["apply_modifiers"] else obj.matrix_local
                 if anim_location_f:
                     anim_location += [(frame, mat.to_translation())]
                 if anim_rotation_f:
