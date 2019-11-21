@@ -1,6 +1,7 @@
 import bpy
 import numpy as np
 import os
+import copy
 import shutil
 
 from . import usda_shader
@@ -31,6 +32,29 @@ def UsdaInit():
 
 
 
+def ObjectAnimationData():
+    obj_mats = {}
+    for obj in target.objects:
+        obj_mats[obj.name] = []
+
+    scn = bpy.context.scene
+    orig_frame = scn.frame_current
+
+    for frame in range(scn.frame_start, scn.frame_end+1):
+        scn.frame_set(frame)
+
+        for obj in target.objects:
+            if obj_mats[obj.name] and obj_mats[obj.name][-1][1] == obj.matrix_world and frame != scn.frame_end:
+                continue
+
+            obj_mats[obj.name] += [(frame, copy.copy(obj.matrix_world))]
+        
+    scn.frame_set(orig_frame)
+
+    return obj_mats
+
+
+
 def ConvertObjects():
     usda = """
 
@@ -38,84 +62,41 @@ def Scope "Objects"
 {"""
     scn = bpy.context.scene
 
+    # keyflame animation
+    if target.keywords["include_animation"]:
+        animation_data = ObjectAnimationData()
+
     for obj in target.objects:
         usda += """
     def Xform """+'"'+Rename(obj.name)+'"'+"""
     {"""
-        
-        mat = obj.matrix_world
 
-        anim_location_f = False
-        anim_rotation_f = False
-        anim_scale_f = False
-
-        # keyflame animation
-        if target.keywords["include_animation"] and obj.animation_data and obj.animation_data.action:
-            action = obj.animation_data.action
-            # animation frames
-            start = max(round(action.frame_range[0]), scn.frame_start)
-            end = min(round(action.frame_range[1]), scn.frame_end)
-            frames = list(range(start, end+1))
-            if scn.frame_end not in frames:
-                frames.append(scn.frame_end)
-            if scn.frame_start not in frames:
-                frames.insert(0, scn.frame_start)
-
-            act_types = [cur.data_path for cur in action.fcurves]
-            anim_location_f = 'location' in act_types
-            anim_rotation_f = 'rotation_euler' in act_types
-            anim_scale_f = 'scale' in act_types
-            anim_location = []
-            anim_rotation = []
-            anim_scale = []
-
-            orig_frame = bpy.context.scene.frame_current
-
-            for frame in frames:
-                scn.frame_set(frame)
-                if anim_location_f:
-                    anim_location += [(frame, mat.to_translation())]
-                if anim_rotation_f:
-                    anim_rotation += [(frame, mat.to_euler())]
-                if anim_scale_f:
-                    anim_scale += [(frame, mat.to_scale())]
-            
-            scn.frame_set(orig_frame)
-
-        if anim_location_f:
+        if target.keywords["include_animation"]:
             usda += """
         double3 xformOp:translate.timeSamples = {"""
-            for frame, location in anim_location:
+            for frame, mat in animation_data[obj.name]:
                 usda += """
-            """+str(frame)+": "+str(tuple(np.array(location)*100))+","
+            """+str(frame)+": "+str(tuple(np.array(mat.to_translation())*100))+","
             usda += """
-        }"""
-        else:
-            usda += """
-        double3 xformOp:translate = """+str(tuple(np.array(mat.translation)*100))
-        
-        if anim_rotation_f:
-            usda += """
+        }
         float3 xformOp:rotateXYZ.timeSamples = {"""
-            for frame, rotation in anim_rotation:
+            for frame, mat in animation_data[obj.name]:
                 usda += """
-            """+str(frame)+": "+str(tuple(np.array(rotation)*180/np.pi))+","
+            """+str(frame)+": "+str(tuple(np.array(mat.to_euler())*180/np.pi))+","
             usda += """
-        }"""
-        else:
-            usda += """
-        float3 xformOp:rotateXYZ = """+str(tuple(np.array(mat.to_euler())*180/np.pi))
-        
-        if anim_scale_f:
-            usda += """
+        }
         float3 xformOp:scale.timeSamples = {"""
-            for frame, scale in anim_scale:
+            for frame, mat in animation_data[obj.name]:
                 usda += """
-            """+str(frame)+": "+str(tuple(np.array(scale)*100))+","
+            """+str(frame)+": "+str(tuple(np.array(mat.to_scale())*100))+","
             usda += """
         }"""
+
         else:
+            mat = obj.matrix_world
             usda += """
+        double3 xformOp:translate = """+str(tuple(np.array(mat.to_translation())*100))+"""
+        float3 xformOp:rotateXYZ = """+str(tuple(np.array(mat.to_euler())*180/np.pi))+"""
         float3 xformOp:scale = """+str(tuple(np.array(mat.to_scale())*100))
 
         usda += """
