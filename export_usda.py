@@ -31,7 +31,7 @@ def UsdaInit():
 
 
 
-def ConvertObjectUsda():
+def ConvertObjects():
     usda = """
 
 def Scope "Objects"
@@ -124,12 +124,13 @@ def Scope "Objects"
 
         # references skel and mesh
         # payload or references other files are not supported by usdzconverter 0.61
-        for mod in obj.modifiers:
-            if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
-                usda += """(
+        if target.keywords["include_armatures"]:
+            for mod in obj.modifiers:
+                if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
+                    usda += """(
             references = </Armatures/"""+Rename(mod.object.name)+""">
         )"""
-                break
+                    break
         
         mesh_name = obj.name if target.keywords["apply_modifiers"] else obj.data.name
         
@@ -161,10 +162,10 @@ def Scope "Objects"
 def ExportUsda():
     usda = "#usda 1.0"
     usda += UsdaInit()
-    usda += ConvertObjectUsda()
-    usda += convert_armature.ConvertArmatureUsda()
-    usda += convert_mesh.ConvertMeshUsda()
-    usda += convert_material.ConvertMaterialUsda()
+    usda += ConvertObjects()
+    usda += convert_armature.ConvertArmatures()
+    usda += convert_mesh.ConvertMeshes()
+    usda += convert_material.ConvertMaterials()
 
     with open(target.keywords["filepath"], mode="w", encoding="utf-8") as f:
         f.write(usda)

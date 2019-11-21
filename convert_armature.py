@@ -9,17 +9,17 @@ from .target import Rename
 
 
 
-def ConvertSkeletonUsda():
+def ConvertSkeleton():
     usda = ""
     return usda
 
-def ConvertSkelAnimationUsda():
+def ConvertSkelAnimation():
     usda = ""
     return usda
 
 
 
-def ConvertArmatureUsda():
+def ConvertArmatures():
     if not target.keywords["include_armatures"]:
         return ""
 
@@ -43,8 +43,8 @@ def Scope "Armatures"
         rel skel:animationSource = </Armatures/"""+Rename(armature.name)+"""/animation>
         rel skel:skeleton = </Armatures/"""+Rename(armature.name)+"""/skeleton>"""
         
-        usda += ConvertSkeletonUsda()
-        usda += ConvertSkelAnimationUsda()
+        usda += ConvertSkeleton()
+        usda += ConvertSkelAnimation()
         usda += """
     }"""
     

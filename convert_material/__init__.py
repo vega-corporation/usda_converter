@@ -22,7 +22,7 @@ import os
 
 
 
-def ConvertMaterial():
+def ConvertMaterialShader():
     # make dir
     if target.keywords["make_new_textures"]:
         os.makedirs(target.asset_dir, exist_ok=True)
@@ -52,13 +52,13 @@ def ConvertMaterial():
 
 
 
-def ConvertMaterialUsda():
+def ConvertMaterials():
     usda = """
     
 def "Materials"
 {"""
 
-    shaders = ConvertMaterial()
+    shaders = ConvertMaterialShader()
     
     for mat_name in shaders:
         shader = shaders[mat_name]

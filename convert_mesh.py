@@ -20,7 +20,7 @@ def MeshTriangulate(me):
 
 
 
-def ConvertMeshDataUsda(mesh):
+def ConvertMeshData(mesh):
     # get vertex
     faceVertexCounts = [None]*len(mesh.polygons)
     mesh.polygons.foreach_get("loop_total", faceVertexCounts)
@@ -105,7 +105,7 @@ def ConvertMeshDataUsda(mesh):
 
 
 
-def ConvertMeshUsda():
+def ConvertMeshes():
     usda = """
 
 def Scope "Meshes"
@@ -144,7 +144,7 @@ def Scope "Meshes"
         usda += """
     def """+'"'+Rename(name)+'"'+"""
     {"""
-        usda += ConvertMeshDataUsda(me)
+        usda += ConvertMeshData(me)
 
         usda += """
     }"""
