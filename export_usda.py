@@ -36,7 +36,6 @@ def ConvertObjectUsda():
 def Scope "Objects"
 {"""
     scn = bpy.context.scene
-    orig_frame = bpy.context.scene.frame_current
 
     for obj in target.objects:
         usda += """
@@ -70,16 +69,19 @@ def Scope "Objects"
             anim_rotation = []
             anim_scale = []
 
+            orig_frame = bpy.context.scene.frame_current
+
             for frame in frames:
                 scn.frame_set(frame)
                 mat = obj.matrix_world if target.keywords["apply_modifiers"] else obj.matrix_local
-
                 if anim_location_f:
                     anim_location += [(frame, mat.to_translation())]
                 if anim_rotation_f:
                     anim_rotation += [(frame, mat.to_euler())]
                 if anim_scale_f:
                     anim_scale += [(frame, mat.to_scale())]
+            
+            scn.frame_set(orig_frame)
 
         if anim_location_f:
             usda += """
@@ -152,8 +154,6 @@ def Scope "Objects"
     }"""
     usda += """
 }"""
-
-    scn.frame_set(orig_frame)
 
     return usda
 
