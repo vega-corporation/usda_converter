@@ -91,6 +91,28 @@ def ConvertMeshData(mesh):
         )
         int[] primvars:uv:indices = """+str(uv_indices)
 
+    if target.keywords["include_armatures"]:
+        elementsize = 0
+        for i, v in enumerate(mesh.vertices):
+            if elementsize < len(v.groups):
+                elementsize = len(v.groups)
+
+        joint_indices = [0]*len(mesh.vertices)*elementsize
+        joint_weights = [0]*len(mesh.vertices)*elementsize
+        for i, v in enumerate(mesh.vertices):
+            for j, g in enumerate(v.groups):
+                joint_indices[i*elementsize+j] = g.group
+                joint_weights[i*elementsize+j] = g.weight
+        usda += """
+        int[] primvars:skel:jointIndices = """+str(joint_indices)+""" (
+            elementSize = """+str(elementsize)+"""
+            interpolation = "vertex"
+        )
+        float[] primvars:skel:jointWeights = """+str(joint_weights)+""" (
+            elementSize = """+str(elementsize)+"""
+            interpolation = "vertex"
+        )"""
+
     for i, ids in enumerate(mat_ids):
         usda += """
         def """+'"'+"mat_"+str(i).zfill(4)+'"'+"""
