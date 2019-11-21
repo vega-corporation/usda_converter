@@ -52,8 +52,8 @@ def Scope "Objects"
         if target.keywords["include_animation"] and obj.animation_data and obj.animation_data.action:
             action = obj.animation_data.action
             # animation frames
-            start = min(round(action.frame_range[0]), scn.frame_start)
-            end = max(round(action.frame_range[1]), scn.frame_end)
+            start = max(round(action.frame_range[0]), scn.frame_start)
+            end = min(round(action.frame_range[1]), scn.frame_end)
             frames = list(range(start, end+1))
             if scn.frame_end not in frames:
                 frames.append(scn.frame_end)
