@@ -138,7 +138,8 @@ def Scope "Meshes"
             continue
 
         # triangulate（fixed for iOS13.）
-        MeshTriangulate(me)
+        if target.keywords["mesh_triangulate"]:
+            MeshTriangulate(me)
 
         # get mesh data
         usda += """

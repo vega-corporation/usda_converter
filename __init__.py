@@ -70,14 +70,19 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
                   ),
             default='Z',
             )
+    apply_modifiers: BoolProperty(
+            name="Apply Modifiers",
+            description="Apply modifiers",
+            default=True,
+            )
     include_uvs: BoolProperty(
             name="Include UVs",
             description="Write out the active UV coordinates",
             default=True,
             )
-    apply_modifiers: BoolProperty(
-            name="Apply Modifiers",
-            description="Apply modifiers",
+    mesh_triangulate: BoolProperty(
+            name="Triangulate Faces",
+            description="Convert all faces to triangles",
             default=True,
             )
     include_animation: BoolProperty(
@@ -105,8 +110,9 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
 
         mesh_col = self.layout.box().column()
         mesh_col.label(text="Mesh:", icon='MESH_DATA')
-        mesh_col.prop(self, "include_uvs")
         mesh_col.prop(self, "apply_modifiers")
+        mesh_col.prop(self, "include_uvs")
+        mesh_col.prop(self, "mesh_triangulate")
 
         anim_col = self.layout.box().column()
         anim_col.label(text="Animation:", icon='ANIM_DATA')
