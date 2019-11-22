@@ -4,7 +4,6 @@ import os
 import copy
 import shutil
 
-from . import usda_shader
 from . import target
 from .target import Rename
 from . import convert_material

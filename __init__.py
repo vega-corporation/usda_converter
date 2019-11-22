@@ -20,14 +20,12 @@ import shutil
 if "bpy" in locals():
     import importlib
     importlib.reload(target)
-    importlib.reload(usda_shader)
     importlib.reload(convert_material)
     importlib.reload(convert_mesh)
     importlib.reload(convert_armature)
     importlib.reload(export_usda)
 else:
     from . import target
-    from . import usda_shader
     from . import convert_material
     from . import convert_mesh
     from . import convert_armature

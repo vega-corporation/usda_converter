@@ -4,7 +4,7 @@ import shutil
 import os
 
 from .. import target
-from .. import usda_shader
+from . import usda_shader
 from . import utils
 from . import color_function
     
