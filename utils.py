@@ -4,10 +4,11 @@ import os
 
 
 def SetTargets(key):
+    from bpy_extras.io_utils import axis_conversion
     global keywords
     global objects
-    global meshes
     global asset_dir
+    global global_matrix
 
     keywords = key
 
@@ -20,6 +21,7 @@ def SetTargets(key):
 
     asset_dir = os.path.splitext(key["filepath"])[0] + '_assets'
 
+    global_matrix = (axis_conversion(to_forward='Y', to_up='Z').to_4x4())
 
 
 def Rename(name):

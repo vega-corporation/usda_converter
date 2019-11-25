@@ -40,13 +40,10 @@ from bpy.props import (
         )
 from bpy_extras.io_utils import (
         ExportHelper,
-        orientation_helper,
-        axis_conversion,
         )
 
 
 
-@orientation_helper(axis_forward='Y', axis_up='Z')
 class ExportUsda(bpy.types.Operator, ExportHelper):
     bl_idname = 'export_usda.usda'
     bl_label = 'Export Usda'
@@ -131,13 +128,7 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
     check_extension = True
 
     def execute(self, context):
-        keywords = self.as_keywords()
-        global_matrix = (axis_conversion(to_forward=self.axis_forward,
-                                         to_up=self.axis_up,
-                                         ).to_4x4())
-        keywords["global_matrix"] = global_matrix
-        utils.SetTargets(keywords)
-        # utils.SetTargets(self.as_keywords())
+        utils.SetTargets(self.as_keywords())
         
         # export usda
         export_usda.ExportUsda()
