@@ -4,8 +4,8 @@ import os
 import copy
 import shutil
 
-from . import target
-from .target import Rename
+from . import utils
+from .utils import Rename
 from . import convert_material
 from . import convert_mesh
 from . import convert_armature
@@ -18,14 +18,14 @@ def UsdaInit():
     usda = """#usda 1.0
 (
     defaultPrim = "Objects"""+'"'
-    if target.keywords["include_animation"]:
+    if utils.keywords["include_animation"]:
         usda += """
     startTimeCode = """+str(scn.frame_start)+"""
     endTimeCode = """+str(scn.frame_end)+"""
     timeCodesPerSecond = """+str(scn.render.fps*scn.render.frame_map_old/scn.render.frame_map_new)
 
     usda += """
-    upAxis = """+'"'+target.keywords["up_axis"]+'"'+"""
+    upAxis = """+'"'+utils.keywords["up_axis"]+'"'+"""
 )"""
     return usda
 
@@ -33,7 +33,7 @@ def UsdaInit():
 
 def ObjectAnimationData():
     obj_mats = {}
-    for obj in target.objects:
+    for obj in utils.objects:
         obj_mats[obj.name] = []
 
     scn = bpy.context.scene
@@ -42,7 +42,7 @@ def ObjectAnimationData():
     for frame in range(scn.frame_start, scn.frame_end+1):
         scn.frame_set(frame)
 
-        for obj in target.objects:
+        for obj in utils.objects:
             if obj_mats[obj.name] and obj_mats[obj.name][-1][1] == obj.matrix_world and frame != scn.frame_end:
                 continue
 
@@ -62,15 +62,15 @@ def Scope "Objects"
     scn = bpy.context.scene
 
     # keyflame animation
-    if target.keywords["include_animation"]:
+    if utils.keywords["include_animation"]:
         animation_data = ObjectAnimationData()
 
-    for obj in target.objects:
+    for obj in utils.objects:
         usda += """
     def Xform """+'"'+Rename(obj.name)+'"'+"""
     {"""
 
-        if target.keywords["include_animation"]:
+        if utils.keywords["include_animation"]:
             usda += """
         double3 xformOp:translate.timeSamples = {"""
             for frame, mat in animation_data[obj.name]:
@@ -104,7 +104,7 @@ def Scope "Objects"
 
         # references skel and mesh
         # payload or references other files are not supported by usdzconverter 0.61
-        if target.keywords["include_armatures"]:
+        if utils.keywords["include_armatures"]:
             for mod in obj.modifiers:
                 if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
                     usda += """(
@@ -112,7 +112,7 @@ def Scope "Objects"
         )"""
                     break
         
-        mesh_name = obj.name if target.keywords["apply_modifiers"] else obj.data.name
+        mesh_name = obj.name if utils.keywords["apply_modifiers"] else obj.data.name
         
         usda += """
         {
@@ -147,6 +147,6 @@ def ExportUsda():
     usda += convert_mesh.ConvertMeshes()
     usda += convert_material.ConvertMaterials()
 
-    with open(target.keywords["filepath"], mode="w", encoding="utf-8") as f:
+    with open(utils.keywords["filepath"], mode="w", encoding="utf-8") as f:
         f.write(usda)
     

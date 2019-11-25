@@ -16,8 +16,8 @@ else:
     from . import color_function
 
 import bpy
-from .. import target
-from ..target import Rename
+from .. import utils
+from ..utils import Rename
 import os
 
 
@@ -25,12 +25,12 @@ import os
 
 def ConvertMaterialShader():
     # make dir
-    if target.keywords["make_new_textures"]:
-        os.makedirs(target.asset_dir, exist_ok=True)
+    if utils.keywords["make_new_textures"]:
+        os.makedirs(utils.asset_dir, exist_ok=True)
     
-    # target materials
+    # utils materials
     materials = []
-    for obj in target.objects:
+    for obj in utils.objects:
         for mat in obj.material_slots:
             if mat.material and mat.material not in materials:
                 materials.append(mat.material)

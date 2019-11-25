@@ -4,8 +4,8 @@ import math
 import os
 import shutil
 
-from . import target
-from .target import Rename
+from . import utils
+from .utils import Rename
 
 
 
@@ -51,7 +51,7 @@ def ConvertMeshData(mesh):
     # uv
     uv = None
     uv_layer = mesh.uv_layers.active
-    if uv_layer and target.keywords["include_uvs"]:
+    if uv_layer and utils.keywords["include_uvs"]:
         uv_all = [None]*len(mesh.loops)*2
         uv_layer.data.foreach_get("uv", uv_all)
         uv_all = [float('{:.5f}'.format(n)) for n in uv_all]
@@ -91,7 +91,7 @@ def ConvertMeshData(mesh):
         )
         int[] primvars:uv:indices = """+str(uv_indices)
 
-    if target.keywords["include_armatures"]:
+    if utils.keywords["include_armatures"]:
         elementsize = 0
         for i, v in enumerate(mesh.vertices):
             if elementsize < len(v.groups):
@@ -137,10 +137,10 @@ def Scope "Meshes"
     meshes = []
     depsgraph = bpy.context.evaluated_depsgraph_get()
 
-    for obj in target.objects:
+    for obj in utils.objects:
 
         # include all meshes if apply modifier
-        if target.keywords["apply_modifiers"]:
+        if utils.keywords["apply_modifiers"]:
             ob_for_convert = obj.evaluated_get(depsgraph)
             name = obj.name
         else:
@@ -160,7 +160,7 @@ def Scope "Meshes"
             continue
 
         # triangulate（fixed for iOS13.）
-        if target.keywords["mesh_triangulate"]:
+        if utils.keywords["mesh_triangulate"]:
             MeshTriangulate(me)
 
         # get mesh data

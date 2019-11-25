@@ -19,13 +19,13 @@ import shutil
 
 if "bpy" in locals():
     import importlib
-    importlib.reload(target)
+    importlib.reload(utils)
     importlib.reload(convert_material)
     importlib.reload(convert_mesh)
     importlib.reload(convert_armature)
     importlib.reload(export_usda)
 else:
-    from . import target
+    from . import utils
     from . import convert_material
     from . import convert_mesh
     from . import convert_armature
@@ -136,8 +136,8 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
                                          to_up=self.axis_up,
                                          ).to_4x4())
         keywords["global_matrix"] = global_matrix
-        target.SetTargets(keywords)
-        # target.SetTargets(self.as_keywords())
+        utils.SetTargets(keywords)
+        # utils.SetTargets(self.as_keywords())
         
         # export usda
         export_usda.ExportUsda()
