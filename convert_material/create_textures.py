@@ -5,7 +5,7 @@ import os
 
 from .. import target
 from . import usda_shader
-from . import utils
+from . import node_utils
 from . import color_function
     
 
@@ -37,7 +37,7 @@ def CompositeColor(extree, mat_socket):
 
 
 def CompositeTree(scn, mat, color, socket, name):
-    color_ = utils.GetColor(socket.default_value, len(color))
+    color_ = node_utils.GetColor(socket.default_value, len(color))
     color.clear()
     if not socket.links:
         color.extend(color_)
@@ -71,16 +71,16 @@ def CompositeTree(scn, mat, color, socket, name):
     # make composite texture
     elif target.keywords["make_new_textures"]:
         # default render size
-        utils.CompositeNode.render_resolution = [32, 32]
+        node_utils.CompositeNode.render_resolution = [32, 32]
         # make composite tree
-        extree = utils.NodeTreeEx(scn.node_tree)
+        extree = node_utils.NodeTreeEx(scn.node_tree)
         comp_socket = CompositeColor(extree, from_socket)
         if comp_socket:
             output_comp = extree.AddNode('CompositorNodeComposite')
             scn.node_tree.links.new(comp_socket, output_comp.inputs['Image'])
             # render
-            scn.render.resolution_x = utils.CompositeNode.render_resolution[0]
-            scn.render.resolution_y = utils.CompositeNode.render_resolution[1]
+            scn.render.resolution_x = node_utils.CompositeNode.render_resolution[0]
+            scn.render.resolution_y = node_utils.CompositeNode.render_resolution[1]
             scn.render.filepath = os.path.join(mat_dir, name+".png")
             bpy.ops.render.render(scene=scn.name, write_still=True)
     

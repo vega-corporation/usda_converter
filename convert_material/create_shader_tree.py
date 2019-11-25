@@ -4,14 +4,14 @@ from enum import Enum, auto
 import bpy
 
 
-from . import utils
+from . import node_utils
 from . import shader_function
 
 
 
 def GetDefaultValue(socket):
     if socket.type == 'SHADER':
-        shader = utils.PBRShader()
+        shader = node_utils.PBRShader()
         shader.Mute()
         return shader
     if type(socket.default_value) == bpy.types.bpy_prop_array:
@@ -29,12 +29,12 @@ def ShaderTraversal(node):
             link = node_input.links[0]
             if node_input.type == 'SHADER':
                 if link.from_socket.type == 'SHADER':
-                    new_node = utils.ShaderNode(link.from_node)
+                    new_node = node_utils.ShaderNode(link.from_node)
                     ShaderTraversal(new_node)
                     node.inputs[name] = new_node.shader
                 else:
                     out = []
-                    node.inputs[name] = utils.PBRShader()
+                    node.inputs[name] = node_utils.PBRShader()
                     node.inputs[name].base_color = [link.from_socket]
             else:
                 node.inputs[name] = [link.from_socket]
@@ -56,7 +56,7 @@ def GenerateShaderData(mat):
         return None
 
     # generate pbr shader from node tree
-    output_shader = utils.ShaderNode(output_node)
+    output_shader = node_utils.ShaderNode(output_node)
     ShaderTraversal(output_shader)
     
     return output_shader
@@ -68,7 +68,7 @@ def CreateColor(pbrtree, socket, color):
     if color[0] is None:
         return
     # mixrgb
-    if type(color[0]) is utils.ShaderMixRGB:
+    if type(color[0]) is node_utils.ShaderMixRGB:
         for col in color:
             mix_node = pbrtree.AddNode('ShaderNodeMixRGB')
             pbrtree.tree.links.new(mix_node.outputs['Color'], socket)
@@ -81,8 +81,8 @@ def CreateColor(pbrtree, socket, color):
         if type(socket.default_value) is float:
             socket.default_value = color[0]
         else:
-            col = utils.GetColor(color, len(socket.default_value))
-            socket.default_value = utils.GetColor(color, len(socket.default_value))
+            col = node_utils.GetColor(color, len(socket.default_value))
+            socket.default_value = node_utils.GetColor(color, len(socket.default_value))
     # socket
     else:
         pbrtree.tree.links.new(color[0], socket)
@@ -165,7 +165,7 @@ def CreateShaderTree(mat):
     
     # make output, principled shader
     tree = mat.node_tree
-    pbrtree = utils.NodeTreeEx(tree)
+    pbrtree = node_utils.NodeTreeEx(tree)
     output = pbrtree.AddNode('ShaderNodeOutputMaterial')
     principled = pbrtree.AddNode('ShaderNodeBsdfPrincipled')
     tree.links.new(principled.outputs['BSDF'], output.inputs['Surface'])

@@ -1,14 +1,14 @@
 
 if "bpy" in locals():
     import importlib
-    importlib.reload(utils)
+    importlib.reload(node_utils)
     importlib.reload(usda_shader)
     importlib.reload(create_shader_tree)
     importlib.reload(create_textures)
     importlib.reload(shader_function)
     importlib.reload(color_function)
 else:
-    from . import utils
+    from . import node_utils
     from . import usda_shader
     from . import create_shader_tree
     from . import create_textures
