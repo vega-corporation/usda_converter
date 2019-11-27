@@ -4,42 +4,37 @@ import math
 import os
 import shutil
 
-from . import keywords
-from . import usda_mesh
-
-
-# Triangulate（Required for iOS13.）
-def MeshTriangulate():
-    bpy.ops.object.mode_set(mode = 'EDIT')
-    bpy.ops.mesh.reveal()
-    bpy.ops.mesh.select_all(action = 'SELECT')
-    bpy.ops.mesh.quads_convert_to_tris()
-    bpy.ops.object.mode_set(mode = 'OBJECT')
+from . import utils
+from .utils import Rename
 
 
 
 
-def GetMeshData(obj):
-    usda = usda_mesh.UsdaMesh()
+def MeshTriangulate(me):
+    import bmesh
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    bmesh.ops.triangulate(bm, faces=bm.faces)
+    bm.to_mesh(me)
+    bm.free()
 
-    mesh = obj.data
 
+
+def ConvertMeshData(mesh):
     # get vertex
     faceVertexCounts = [None]*len(mesh.polygons)
     mesh.polygons.foreach_get("loop_total", faceVertexCounts)
-    usda.faceVertexCounts = faceVertexCounts
+    
     faceVertexIndices = [None]*len(mesh.loops)
     mesh.polygons.foreach_get("vertices", faceVertexIndices)
-    usda.faceVertexIndices = faceVertexIndices
     
     # points
     points = [None]*len(mesh.vertices)*3
     mesh.vertices.foreach_get("co", points)
     # round units
-    points = [round(n*100,5) for n in points]
+    points = [round(n,5) for n in points]
     # [1,2,3,4,5,6,...] -> [(1,2,3),(4,5,6),...]
     points = list(zip(*[iter(points)]*3))
-    usda.points = str(points)
 
     # normals
     normals_all = [None]*len(mesh.loops)*3
@@ -52,12 +47,11 @@ def GetMeshData(obj):
     normals, normals_indices = np.unique(normals_all, axis=0, return_inverse=True)
     normals = [tuple([float('{:.5f}'.format(nn)) for nn in n]) for n in normals]
     normals_indices = list(normals_indices)
-    usda.normal = str(normals)
-    usda.normal_indices = str(normals_indices)
 
     # uv
+    uv = None
     uv_layer = mesh.uv_layers.active
-    if uv_layer and keywords.key["use_uvs"]:
+    if uv_layer and utils.keywords["include_uvs"]:
         uv_all = [None]*len(mesh.loops)*2
         uv_layer.data.foreach_get("uv", uv_all)
         uv_all = [float('{:.5f}'.format(n)) for n in uv_all]
@@ -67,53 +61,108 @@ def GetMeshData(obj):
         uv, uv_indices = np.unique(uv_all, axis=0, return_inverse=True)
         uv = [tuple([float('{:.5f}'.format(nn)) for nn in n]) for n in uv]
         uv_indices = list(uv_indices)
-        usda.uv = str(uv)
-        usda.uv_indices = str(uv_indices)
 
-    # material indices
-    usda.mat_indices = { ms.material.name : [] for ms in obj.material_slots }
-    for i, poly in enumerate( obj.data.polygons ):
-        usda.mat_indices[ obj.material_slots[ poly.material_index ].name ].append( i )
+    # bounding box
+    extent = np.array(points)
+    extent = [tuple(np.min(extent, axis=0)), tuple(np.max(extent, axis=0))]
+
+    usda = """
+        float3[] extent = """+str(extent)+"""
+        int[] faceVertexCounts = """+str(faceVertexCounts)+"""
+        int[] faceVertexIndices = """+str(faceVertexIndices)+"""
+        point3f[] points = """+str(points)+"""
+        normal3f[] primvars:normals = """+str(normals)+""" (
+            interpolation = "faceVarying"
+        )
+        int[] primvars:normals:indices = """+str(normals_indices)
+        
+    if uv:
+        usda += """
+        texCoord2f[] primvars:uv = """+str(uv)+""" (
+            interpolation = "faceVarying"
+        )
+        int[] primvars:uv:indices = """+str(uv_indices)
+
+
 
     return usda
 
 
 
+def ConvertMeshMaterials(mesh):
+    usda = ""
+    # material indices
+    mat_ids_all = [None]*len(mesh.polygons)
+    mesh.polygons.foreach_get("material_index", mat_ids_all)
+    mat_ids_all = np.array(mat_ids_all)
+    mat_ids = [ [] for i in range(max(mat_ids_all)+1) ]
+    for i, ids in enumerate(mat_ids):
+        mat_ids[i] = np.where(mat_ids_all == i)[0]
 
-def GetMeshDataAll(objects):
-    usda_meshes = {}
-    # get active
-    actived = bpy.context.view_layer.objects.active
-    selected = [obj for obj in bpy.data.objects if obj.select_get()]
+    for i, ids in enumerate(mat_ids):
+        usda += """
+        def """+'"'+"mat_"+str(i).zfill(4)+'"'+"""
+        {
+            uniform token elementType = "face"
+            uniform token familyName = "materialBind"
+            int[] indices = """+str(list(ids))+"""
+        }"""
 
-    # get original objects mesh
-    for obj in objects:
-        # make sub object
-        bpy.ops.object.select_all(action='DESELECT')
-        obj.select_set(True)
-        bpy.context.view_layer.objects.active = obj
-        bpy.ops.object.duplicate()
-        sub_obj = bpy.context.view_layer.objects.active
+    return usda
 
-        # apply modifiers
-        if keywords.key["use_mesh_modifiers"]:
-            for modifier in sub_obj.modifiers:
-                bpy.ops.object.modifier_apply(modifier=modifier.name)
 
-        # triangulate
-        MeshTriangulate()
+
+def ConvertMeshes():
+    usda = """
+
+def Scope "Meshes"
+{"""
+
+    # get meshes
+    meshes = []
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+
+    for obj in utils.objects:
+
+        # include preview meshes if apply modifier
+        if utils.keywords["apply_modifiers"]:
+            ob_for_convert = obj.evaluated_get(depsgraph)
+            name = obj.name
+        else:
+            if obj.data in meshes:
+                continue
+
+            ob_for_convert = obj.original
+            meshes.append(obj.data)
+            name = obj.data.name
+
+        try:
+            me = ob_for_convert.to_mesh()
+        except RuntimeError:
+            me = None
+
+        if me is None:
+            continue
+
+        # triangulate（fixed for iOS13.）
+        if utils.keywords["mesh_triangulate"]:
+            MeshTriangulate(me)
 
         # get mesh data
-        usda_meshes[obj.data.name] = GetMeshData(sub_obj)
-        
-        # remove sub object
-        bpy.data.meshes.remove(sub_obj.data)
-    
-    # set active
-    bpy.context.view_layer.objects.active = actived
-    bpy.ops.object.select_all(action='DESELECT')
-    for obj in selected:
-        obj.select_set(True)
+        usda += """
+    def """+'"'+Rename(name)+'"'+"""
+    {"""
+        usda += ConvertMeshData(me)
 
-    return usda_meshes
+        usda += ConvertMeshMaterials(me)
+
+        usda += """
+    }"""
+        # clear
+        ob_for_convert.to_mesh_clear()
+    
+    usda += """
+}"""
+
+    return usda
 

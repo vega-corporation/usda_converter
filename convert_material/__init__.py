@@ -1,35 +1,38 @@
 
 if "bpy" in locals():
-    import imp
-    imp.reload(utils)
-    imp.reload(create_shader_tree)
-    imp.reload(create_textures)
-    imp.reload(shader_function)
-    imp.reload(color_function)
+    import importlib
+    importlib.reload(node_utils)
+    importlib.reload(usda_shader)
+    importlib.reload(create_shader_tree)
+    importlib.reload(create_textures)
+    importlib.reload(shader_function)
+    importlib.reload(color_function)
 else:
-    from . import utils
+    from . import node_utils
+    from . import usda_shader
     from . import create_shader_tree
     from . import create_textures
     from . import shader_function
     from . import color_function
 
 import bpy
-from .. import keywords
-from .. import usda_shader
+from .. import utils
+from ..utils import Rename
 import os
 
 
 
 
-def ConvertMaterialUsda(tex_dir, objects):
+def ConvertMaterialShader():
     # make dir
-    os.makedirs(tex_dir, exist_ok=True)
+    if utils.keywords["make_new_textures"]:
+        os.makedirs(utils.asset_dir, exist_ok=True)
     
-    # target materials
+    # utils materials
     materials = []
-    for obj in objects:
+    for obj in utils.objects:
         for mat in obj.material_slots:
-            if mat.material not in materials:
+            if mat.material and mat.material not in materials:
                 materials.append(mat.material)
 
     # convert materials
@@ -44,27 +47,103 @@ def ConvertMaterialUsda(tex_dir, objects):
         tree = create_shader_tree.CreateShaderTree(mat)
         
         # composit color
-        shader_data[mat.name] = create_textures.CreateTexturesUsda(mat, tex_dir)
-
-        # delete PBR nodes
-        tree.DeleteNodes()
+        shader_data[mat.name] = create_textures.CreateTexturesUsda(mat)
     
     return shader_data
 
 
 
-def ConvertMaterial(tex_dir):
-    data = {}
-    for mat in bpy.data.materials:
-        # create PBR tree
-        tree = create_shader_tree.CreateShaderTree(mat)
+def ConvertMaterials():
+    usda = """
+    
+def "Materials"
+{"""
 
-        # composit color
-        composit_flag = False
-        if composit_flag:
-            create_textures.CreateTexturesPrincipled(mat, tex_dir)
+    shaders = ConvertMaterialShader()
+    
+    for mat_name in shaders:
+        shader = shaders[mat_name]
+        mat_name = Rename(mat_name)
 
-        # remove inactive nodes
-        remove_original_flag = False
-        if remove_original_flag:
-            create_shader_tree.RegenerateShaderTree(tree)
+        usda += """
+
+    def Material """+'"'+mat_name+'"'+"""
+    {
+        token outputs:displacement.connect = </Materials/"""+mat_name+"""/PBRShader.outputs:displacement>
+        token outputs:surface.connect = </Materials/"""+mat_name+"""/PBRShader.outputs:surface>
+        
+        def Shader "PBRShader"
+        {
+            uniform token info:id = "UsdPreviewSurface" """
+
+        def GetUsdaShader(value, inputs_txt, texture_txt):
+            usda = ""
+            if type(value[0]) is usda_shader.UsdaTexture:
+                usda = """
+            """+inputs_txt+""".connect = </Materials/"""+mat_name+"""/"""+texture_txt
+            else:
+                color = value[0] if len(value) == 1 else tuple(value)
+                usda = """
+            """+inputs_txt+""" = """+str(color)
+            
+            return usda
+
+        usda += GetUsdaShader(shader.diffuseColor, "color3f inputs:diffuseColor", "diffuse_map.outputs:rgb>")
+        usda += GetUsdaShader(shader.emissiveColor, "color3f inputs:emissiveColor", "emission_map.outputs:rgb>")
+        usda += GetUsdaShader(shader.metallic, "float inputs:metallic", "metalness_map.outputs:r>")
+        usda += GetUsdaShader(shader.roughness, "float inputs:roughness", "roughness_map.outputs:r>")
+        usda += GetUsdaShader(shader.clearcoat, "float inputs:clearcoat", "clearcoat_map.outputs:r>")
+        usda += GetUsdaShader(shader.clearcoatRoughness, "float inputs:clearcoatRoughness", "clearcoatroughness_map.outputs:r>")
+        usda += GetUsdaShader(shader.opacity, "float inputs:opacity", "opacity_map.outputs:r>")
+        usda += GetUsdaShader(shader.ior, "float inputs:ior", "ior_map.outputs:r>")
+        usda += GetUsdaShader(shader.normal, "normal3f inputs:normal", "normal_map.outputs:rgb>")
+        usda += GetUsdaShader(shader.displacement, "float inputs:displacement", "displacement_map.outputs:r>")
+        
+        usda += """
+            token outputs:displacement
+            token outputs:surface
+        }
+
+        def Shader "PrimvarUv"
+        {
+            uniform token info:id = "UsdPrimvarReader_float2"
+            float2 inputs:fallback = (0, 0)
+            token inputs:varname = """+'"'+'uv'+'"'+"""
+            float2 outputs:result
+        }"""
+
+        def GetUsdaShaderImage(usda_texture, shader_name, output):
+            if type(usda_texture[0]) is not usda_shader.UsdaTexture:
+                return ""
+                
+            usda = """
+            
+        def Shader """+'"'+shader_name+'"'+"""
+        {
+            uniform token info:id = "UsdUVTexture"
+            float4 inputs:default = (0, 0, 0, 1)
+            asset inputs:file = @"""+usda_texture[0].file+"""@
+            float2 inputs:st.connect = </Materials/"""+mat_name+"""/PrimvarUv.outputs:result>
+            token inputs:wrapS = "repeat"
+            token inputs:wrapT = "repeat"
+            float3 outputs:"""+output+"""
+        }"""
+            return usda
+
+        usda += GetUsdaShaderImage(shader.diffuseColor, "diffuse_map", "rgb")
+        usda += GetUsdaShaderImage(shader.emissiveColor, "emission_map", "rgb")
+        usda += GetUsdaShaderImage(shader.metallic, "metalness_map", "r")
+        usda += GetUsdaShaderImage(shader.roughness, "roughness_map", "r")
+        usda += GetUsdaShaderImage(shader.clearcoat, "clearcoat_map", "r")
+        usda += GetUsdaShaderImage(shader.clearcoatRoughness, "clearcoatroughness_map", "r")
+        usda += GetUsdaShaderImage(shader.opacity, "opacity_map", "r")
+        usda += GetUsdaShaderImage(shader.ior, "ior_map", "r")
+        usda += GetUsdaShaderImage(shader.normal, "normal_map", "rgb")
+        usda += GetUsdaShaderImage(shader.displacement, "displacement_map", "r")
+        
+        usda += """
+    }"""
+
+    usda += """
+}"""
+    return usda

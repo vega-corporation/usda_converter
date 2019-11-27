@@ -19,14 +19,12 @@ import shutil
 
 if "bpy" in locals():
     import importlib
-    importlib.reload(keywords)
-    importlib.reload(usda_shader)
+    importlib.reload(utils)
     importlib.reload(convert_material)
     importlib.reload(convert_mesh)
     importlib.reload(export_usda)
 else:
-    from . import keywords
-    from . import usda_shader
+    from . import utils
     from . import convert_material
     from . import convert_mesh
     from . import export_usda
@@ -35,6 +33,8 @@ import bpy
 from bpy.props import (
         BoolProperty,
         StringProperty,
+        FloatProperty,
+        EnumProperty,
         )
 from bpy_extras.io_utils import (
         ExportHelper,
@@ -54,50 +54,73 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             options={'HIDDEN'},
             )
 
-    use_selection: BoolProperty(
+    selection_only: BoolProperty(
             name="Selection Only",
             description="Export selected objects only",
             default=False,
             )
-    # use_animation: BoolProperty(
-    #         name="Animation",
-    #         description="Write out an OBJ for each frame",
-    #         default=False,
-    #         )
-    use_mesh_modifiers: BoolProperty(
+    up_axis: EnumProperty(
+            name="Axis",# USD can specify Y or Z axis
+            items=( ('Z', "Z Up Y Forward", ""),
+                    ('Y', "Y Up -Z Forward", ""),
+                  ),
+            default='Z',
+            )
+    apply_modifiers: BoolProperty(
             name="Apply Modifiers",
             description="Apply modifiers",
             default=True,
             )
-    use_uvs: BoolProperty(
+    include_uvs: BoolProperty(
             name="Include UVs",
             description="Write out the active UV coordinates",
             default=True,
             )
-    use_composite: BoolProperty(
-            name="Write Textures",
-            description="Write out the textures file",
+    mesh_triangulate: BoolProperty(
+            name="Triangulate Faces",
+            description="Convert all faces to triangles",
             default=True,
             )
+    include_animation: BoolProperty(
+            name="Include keyframe",
+            description="Write out keyframe Animations",
+            default=True,
+            )
+    make_new_textures: BoolProperty(
+            name="Make Textures Asset",
+            description="Generate the new textures in asset folder",
+            default=True,
+            )
+            
+
+    def draw(self, context):
+        layout = self.layout
+        main_col = self.layout.box().column()
+        main_col.prop(self, "selection_only")
+        main_col.prop(self, "up_axis")
+
+        mesh_col = self.layout.box().column()
+        mesh_col.label(text="Mesh:", icon='MESH_DATA')
+        mesh_col.prop(self, "apply_modifiers")
+        mesh_col.prop(self, "include_uvs")
+        mesh_col.prop(self, "mesh_triangulate")
+
+        anim_col = self.layout.box().column()
+        anim_col.label(text="Animation:", icon='ANIM_DATA')
+        anim_col.prop(self, "include_animation")
+
+        tex_col = self.layout.box().column()
+        tex_col.label(text="Texture:", icon='TEXTURE_DATA')
+        tex_col.prop(self, "make_new_textures")
+    
 
     check_extension = True
 
-
     def execute(self, context):
-        keywords.SetKeywords(self.as_keywords())
-
-        # target objects
-        objects = [obj for obj in bpy.data.objects if obj.type == 'MESH']
-        if keywords.key['use_selection']:
-            objects = [obj for obj in objects if obj.select_get()]
-
-        # get usda shader and mesh
-        tex_dir = os.path.splitext(keywords.key["filepath"])[0] + '_textures'
-        usda_shaders = convert_material.ConvertMaterialUsda(tex_dir, objects)
-        usda_meshes = convert_mesh.GetMeshDataAll(objects)
+        utils.SetTargets(self.as_keywords())
         
         # export usda
-        export_usda.ExportUsda(objects, usda_meshes, usda_shaders)
+        export_usda.ExportUsda()
 
         return {'FINISHED'}
 

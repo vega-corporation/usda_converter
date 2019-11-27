@@ -3,9 +3,9 @@ import numpy as np
 import shutil
 import os
 
-from .. import keywords
-from .. import usda_shader
-from . import utils
+from .. import utils
+from . import usda_shader
+from . import node_utils
 from . import color_function
     
 
@@ -36,57 +36,59 @@ def CompositeColor(extree, mat_socket):
 
 
 
-def CompositeTree(tex_dir, scn, mat, socket, name, make_image_flag = True):
-    if not socket.links or not keywords.key["use_composite"]:
+def CompositeTree(scn, mat, color, socket, name):
+    color_ = node_utils.GetColor(socket.default_value, len(color))
+    color.clear()
+    if not socket.links:
+        color.extend(color_)
         return
+        
     from_node = socket.links[0].from_node
     from_socket = socket.links[0].from_socket
-    tex_path = None
 
     # make output path
+    asset_dir = utils.asset_dir
     mat_name = mat.name.replace("/", "_").replace(" ", "")
+    usd_tex_dir = os.path.basename(asset_dir)+'/'+mat_name
     name = name.replace("/", "_").replace(" ", "")
-    mat_dir = os.path.join(tex_dir, mat_name)
+    mat_dir = os.path.join(asset_dir, mat_name)
 
     # copy texture if no change
     if from_node.type == 'TEX_IMAGE':
         filepath = from_node.image.filepath_from_user()
         if os.path.exists(filepath):
-            ext = os.path.splitext(filepath)[1]
-            tex_path = os.path.join(mat_dir, name+ext)
-            os.makedirs(mat_dir, exist_ok=True)
-            shutil.copy(filepath, tex_path)
-        else:
-            return None
+            if utils.keywords["make_new_textures"]:
+                ext = os.path.splitext(filepath)[1]
+                tex_path = os.path.join(mat_dir, name+ext)
+                os.makedirs(mat_dir, exist_ok=True)
+                shutil.copy(filepath, tex_path)
+                color_ = [usda_shader.UsdaTexture()]
+                color_[0].file = usd_tex_dir+'/'+name+os.path.splitext(tex_path)[1]
+            else:
+                color_ = [usda_shader.UsdaTexture()]
+                color_[0].file = filepath
+
     # make composite texture
-    else:
+    elif utils.keywords["make_new_textures"]:
         # default render size
-        utils.CompositeNode.render_resolution = [32, 32]
+        node_utils.CompositeNode.render_resolution = [32, 32]
         # make composite tree
-        extree = utils.NodeTreeEx(scn.node_tree)
+        extree = node_utils.NodeTreeEx(scn.node_tree)
         comp_socket = CompositeColor(extree, from_socket)
         if comp_socket:
             output_comp = extree.AddNode('CompositorNodeComposite')
             scn.node_tree.links.new(comp_socket, output_comp.inputs['Image'])
             # render
-            scn.render.resolution_x = utils.CompositeNode.render_resolution[0]
-            scn.render.resolution_y = utils.CompositeNode.render_resolution[1]
-            tex_path = os.path.join(mat_dir, name+".png")
-            scn.render.filepath = tex_path
+            scn.render.resolution_x = node_utils.CompositeNode.render_resolution[0]
+            scn.render.resolution_y = node_utils.CompositeNode.render_resolution[1]
+            scn.render.filepath = os.path.join(mat_dir, name+".png")
             bpy.ops.render.render(scene=scn.name, write_still=True)
-        # delete composite tree
-        extree.DeleteNodes()
-            
-    # link mat socket to image
-    if make_image_flag:
-        mat.node_tree.links.remove(socket.links[0])
-        if tex_path:
-            image_node = mat.node_tree.nodes.new('ShaderNodeTexImage')
-            image = bpy.data.images.load(tex_path)
-            image_node.image = image
-            mat.node_tree.links.new(image_node.outputs['Color'], socket)
+    
+            color_ = [usda_shader.UsdaTexture()]
+            color_[0].file = usd_tex_dir+'/'+name+".png"
 
-    return tex_path
+    color.extend(color_)
+            
 
 
 
@@ -113,69 +115,25 @@ def GetPrincipledShader(mat):
 
 
 
-def CreateTexturesPrincipled(mat, output_dir):
+def CreateTexturesUsda(mat):
     # create new scene
     scn = CreateSceneComposite()
     principled = GetPrincipledShader(mat)
-
-    CompositeTree(output_dir, scn, mat, principled.inputs['Base Color'], 'Base_Color')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Subsurface'], 'Subsurface')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Subsurface Radius'], 'Subsurface_Radius')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Subsurface Color'], 'Subsurface_Color')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Metallic'], 'Metallic')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Specular'], 'Specular')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Specular Tint'], 'Specular_Tint')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Roughness'], 'Roughness')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Anisotropic'], 'Anisotropic')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Anisotropic Rotation'], 'Anisotropic_Rotation')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Sheen'], 'Sheen')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Sheen Tint'], 'Sheen_Tint')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Clearcoat'], 'Clearcoat')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Clearcoat Roughness'], 'Clearcoat_Roughness')
-    CompositeTree(output_dir, scn, mat, principled.inputs['IOR'], 'IOR')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Transmission'], 'Transmission')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Transmission Roughness'], 'Transmission_Roughness')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Emission'], 'Emission')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Alpha'], 'Alpha')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Normal'], 'Normal')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Clearcoat Normal'], 'Clearcoat_Normal')
-    CompositeTree(output_dir, scn, mat, principled.inputs['Tangent'], 'Tangent')
-
-    # delete scene
-    bpy.data.scenes.remove(scn)
-
-
-
-def CreateTexturesUsda(mat, tex_dir):
-    # create new scene
-    scn = CreateSceneComposite()
-    principled = GetPrincipledShader(mat)
-    mat_name = mat.name.replace("/", "_").replace(" ", "")
-    usd_tex_dir = os.path.basename(tex_dir)+'/'+mat_name
+    shader = usda_shader.UsdaShader()
 
     # shader parameter
-    shader = usda_shader.UsdaShader()
-    def SetUsdaColor(color, socket, name):
-        _color = None
-        path = CompositeTree(tex_dir, scn, mat, socket, name, False)
-        if path:
-            _color = [usda_shader.UsdaTexture()]
-            _color[0].file = usd_tex_dir+'/'+name+os.path.splitext(path)[1]
-        else:
-            _color = utils.GetColor(socket.default_value, len(color))
-        color.clear()
-        color.extend(_color)
-    
-    SetUsdaColor(shader.diffuseColor, principled.inputs['Base Color'], 'diffuseColor')
-    SetUsdaColor(shader.emissiveColor, principled.inputs['Emission'], 'emissiveColor')
-    SetUsdaColor(shader.metallic, principled.inputs['Metallic'], 'metallic')
-    SetUsdaColor(shader.roughness, principled.inputs['Roughness'], 'roughness')
-    SetUsdaColor(shader.clearcoat, principled.inputs['Clearcoat'], 'clearcoat')
-    SetUsdaColor(shader.clearcoatRoughness, principled.inputs['Clearcoat Roughness'], 'clearcoatRoughness')
-    SetUsdaColor(shader.opacity, principled.inputs['Alpha'], 'opacity')
-    SetUsdaColor(shader.ior, principled.inputs['IOR'], 'ior')
-    SetUsdaColor(shader.normal, principled.inputs['Normal'], 'normal')
-    SetUsdaColor(shader.displacement, principled.outputs['BSDF'].links[0].to_node.inputs['Displacement'], 'displacement')
+    CompositeTree(scn, mat, shader.diffuseColor, principled.inputs['Base Color'], 'diffuseColor')
+    CompositeTree(scn, mat, shader.emissiveColor, principled.inputs['Emission'], 'emissiveColor')
+    CompositeTree(scn, mat, shader.metallic, principled.inputs['Metallic'], 'metallic')
+    CompositeTree(scn, mat, shader.roughness, principled.inputs['Roughness'], 'roughness')
+    CompositeTree(scn, mat, shader.clearcoat, principled.inputs['Clearcoat'], 'clearcoat')
+    CompositeTree(scn, mat, shader.clearcoatRoughness, principled.inputs['Clearcoat Roughness'], 'clearcoatRoughness')
+    CompositeTree(scn, mat, shader.opacity, principled.inputs['Alpha'], 'opacity')
+    CompositeTree(scn, mat, shader.ior, principled.inputs['IOR'], 'ior')
+    if principled.outputs['BSDF'].links[0].to_node.inputs['Displacement'].links:
+        CompositeTree(scn, mat, shader.normal, principled.outputs['BSDF'].links[0].to_node.inputs['Displacement'], 'displacement')
+    else:
+        CompositeTree(scn, mat, shader.normal, principled.inputs['Normal'], 'normal')
 
     # delete scene
     bpy.data.scenes.remove(scn)

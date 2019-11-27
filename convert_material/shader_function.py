@@ -1,9 +1,9 @@
 import bpy
 import numpy as np
 
-from . import utils
-from .utils import Blend
-from .. import keywords
+from . import node_utils
+from .node_utils import Blend
+from .. import utils
 
 
 def Handler(node):
@@ -24,8 +24,8 @@ def SetMixRGB(param, blend, fac, color1, color2):
             return
     if color2[0] is None:
         color2 = color1
-    color1 = utils.GetColor(color1, len(param))
-    color2 = utils.GetColor(color2, len(param))
+    color1 = node_utils.GetColor(color1, len(param))
+    color2 = node_utils.GetColor(color2, len(param))
     if type(fac) is float:
         fac = [fac]
     # ソケットに繋がない場合
@@ -49,9 +49,9 @@ def SetMixRGB(param, blend, fac, color1, color2):
         param.extend(list(color))
     # 繋ぐ場合MixRGBを追加
     else:
-        if type(param[0]) is not utils.ShaderMixRGB:
+        if type(param[0]) is not node_utils.ShaderMixRGB:
             param.clear()
-        param.append(utils.ShaderMixRGB(blend, fac, color1, color2))
+        param.append(node_utils.ShaderMixRGB(blend, fac, color1, color2))
 
 
 
@@ -201,7 +201,7 @@ def ShaderNodeBsdfGlass(node):
     node.shader.alpha = [1.0]
     node.shader.normal = node.inputs['Normal']
     # for usda convert
-    if "filepath" in keywords.key:
+    if "filepath" in utils.keywords:
         SetMixRGB(node.shader.alpha, Blend.DIF, 1.0, node.inputs['Color'], [1.0, 1.0, 1.0])
 
 
@@ -210,9 +210,9 @@ def ShaderNodeBsdfTransparent(node):
     node.shader.specular = [0.0]
     node.shader.roughness = [1.0]
     node.shader.emission = [0.0, 0.0, 0.0, 1.0]
-    SetMixRGB(node.shader.alpha, utils.Blend.SUB, 1.0, [1, 1, 1], node.inputs['Color'])
+    SetMixRGB(node.shader.alpha, node_utils.Blend.SUB, 1.0, [1, 1, 1], node.inputs['Color'])
     # for usda convert
-    if "filepath" in keywords.key:
+    if "filepath" in utils.keywords:
         SetMixRGB(node.shader.alpha, Blend.DIF, 1.0, node.inputs['Color'], [1.0, 1.0, 1.0])
 
 
@@ -227,7 +227,7 @@ def ShaderNodeBsdfTranslucent(node):
 
 
 def ShaderNodeBsdfVelvet(node):
-    SetMixRGB(node.shader.base_color, utils.Blend.MUL, 1.0, node.inputs['Color'], node.inputs['Sigma'])
+    SetMixRGB(node.shader.base_color, node_utils.Blend.MUL, 1.0, node.inputs['Color'], node.inputs['Sigma'])
     node.shader.specular = [0.0]
     node.shader.roughness = [1.0]
     node.shader.transmission = [0.0]
