@@ -8,7 +8,6 @@ from . import utils
 from .utils import Rename
 from . import convert_material
 from . import convert_mesh
-from . import convert_armature
 
 
 
@@ -104,13 +103,6 @@ def Scope "Objects"
 
         # references skel and mesh
         # payload or references other files are not supported by usdzconverter 0.61
-        if utils.keywords["include_armatures"]:
-            for mod in obj.modifiers:
-                if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
-                    usda += """(
-            references = </Armatures/"""+Rename(mod.object.name)+""">
-        )"""
-                    break
         
         mesh_name = obj.name if utils.keywords["apply_modifiers"] else obj.data.name
         
@@ -143,7 +135,6 @@ def ExportUsda():
     usda = "#usda 1.0"
     usda += UsdaInit()
     usda += ConvertObjects()
-    usda += convert_armature.ConvertArmatures()
     usda += convert_mesh.ConvertMeshes()
     usda += convert_material.ConvertMaterials()
 

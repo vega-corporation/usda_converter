@@ -22,13 +22,11 @@ if "bpy" in locals():
     importlib.reload(utils)
     importlib.reload(convert_material)
     importlib.reload(convert_mesh)
-    importlib.reload(convert_armature)
     importlib.reload(export_usda)
 else:
     from . import utils
     from . import convert_material
     from . import convert_mesh
-    from . import convert_armature
     from . import export_usda
 
 import bpy
@@ -85,12 +83,7 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             )
     include_animation: BoolProperty(
             name="Include Animation",
-            description="Write out Animations",
-            default=True,
-            )
-    include_armatures: BoolProperty(
-            name="Include Armatures",
-            description="Write out the Armatures",
+            description="Write out keyframe Animations",
             default=True,
             )
     make_new_textures: BoolProperty(
@@ -114,11 +107,7 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
 
         anim_col = self.layout.box().column()
         anim_col.label(text="Animation:", icon='ANIM_DATA')
-        anim_col.prop(self, "include_animation")
-
-        arm_col = self.layout.box().column()
-        arm_col.label(text="Armature:", icon='ARMATURE_DATA')
-        arm_col.prop(self, "include_armatures")
+        anim_col.prop(self, "include_keyframe")
 
         tex_col = self.layout.box().column()
         tex_col.label(text="Texture:", icon='TEXTURE_DATA')

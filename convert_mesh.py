@@ -62,14 +62,6 @@ def ConvertMeshData(mesh):
         uv = [tuple([float('{:.5f}'.format(nn)) for nn in n]) for n in uv]
         uv_indices = list(uv_indices)
 
-    # material indices
-    mat_ids_all = [None]*len(mesh.polygons)
-    mesh.polygons.foreach_get("material_index", mat_ids_all)
-    mat_ids_all = np.array(mat_ids_all)
-    mat_ids = [ [] for i in range(max(mat_ids_all)+1) ]
-    for i, ids in enumerate(mat_ids):
-        mat_ids[i] = np.where(mat_ids_all == i)[0]
-
     # bounding box
     extent = np.array(points)
     extent = [tuple(np.min(extent, axis=0)), tuple(np.max(extent, axis=0))]
@@ -91,27 +83,21 @@ def ConvertMeshData(mesh):
         )
         int[] primvars:uv:indices = """+str(uv_indices)
 
-    if utils.keywords["include_armatures"]:
-        elementsize = 0
-        for i, v in enumerate(mesh.vertices):
-            if elementsize < len(v.groups):
-                elementsize = len(v.groups)
 
-        joint_indices = [0]*len(mesh.vertices)*elementsize
-        joint_weights = [0]*len(mesh.vertices)*elementsize
-        for i, v in enumerate(mesh.vertices):
-            for j, g in enumerate(v.groups):
-                joint_indices[i*elementsize+j] = g.group
-                joint_weights[i*elementsize+j] = g.weight
-        usda += """
-        int[] primvars:skel:jointIndices = """+str(joint_indices)+""" (
-            elementSize = """+str(elementsize)+"""
-            interpolation = "vertex"
-        )
-        float[] primvars:skel:jointWeights = """+str(joint_weights)+""" (
-            elementSize = """+str(elementsize)+"""
-            interpolation = "vertex"
-        )"""
+
+    return usda
+
+
+
+def ConvertMeshMaterials(mesh):
+    usda = ""
+    # material indices
+    mat_ids_all = [None]*len(mesh.polygons)
+    mesh.polygons.foreach_get("material_index", mat_ids_all)
+    mat_ids_all = np.array(mat_ids_all)
+    mat_ids = [ [] for i in range(max(mat_ids_all)+1) ]
+    for i, ids in enumerate(mat_ids):
+        mat_ids[i] = np.where(mat_ids_all == i)[0]
 
     for i, ids in enumerate(mat_ids):
         usda += """
@@ -123,7 +109,6 @@ def ConvertMeshData(mesh):
         }"""
 
     return usda
-
 
 
 
@@ -139,7 +124,7 @@ def Scope "Meshes"
 
     for obj in utils.objects:
 
-        # include all meshes if apply modifier
+        # include preview meshes if apply modifier
         if utils.keywords["apply_modifiers"]:
             ob_for_convert = obj.evaluated_get(depsgraph)
             name = obj.name
@@ -168,6 +153,8 @@ def Scope "Meshes"
     def """+'"'+Rename(name)+'"'+"""
     {"""
         usda += ConvertMeshData(me)
+
+        usda += ConvertMeshMaterials(me)
 
         usda += """
     }"""

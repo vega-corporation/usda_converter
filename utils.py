@@ -6,22 +6,22 @@ import os
 def SetTargets(key):
     from bpy_extras.io_utils import axis_conversion
     global keywords
-    global objects
-    global asset_dir
     global global_matrix
+    global asset_dir
+    global objects
+    global armatures
 
     keywords = key
 
-    scene = bpy.context.scene
+    global_matrix = (axis_conversion(to_forward='Y', to_up='Z').to_4x4())
+
+    asset_dir = os.path.splitext(key["filepath"])[0] + '_assets'
+
     if key['selection_only']:
         objects = bpy.context.selected_objects
     else:
         objects = bpy.context.scene.objects[:]
     objects = tuple(objects)
-
-    asset_dir = os.path.splitext(key["filepath"])[0] + '_assets'
-
-    global_matrix = (axis_conversion(to_forward='Y', to_up='Z').to_4x4())
 
 
 def Rename(name):
