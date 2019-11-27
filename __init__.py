@@ -82,7 +82,7 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             default=True,
             )
     include_animation: BoolProperty(
-            name="Include Animation",
+            name="Include keyframe",
             description="Write out keyframe Animations",
             default=True,
             )
@@ -107,7 +107,7 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
 
         anim_col = self.layout.box().column()
         anim_col.label(text="Animation:", icon='ANIM_DATA')
-        anim_col.prop(self, "include_keyframe")
+        anim_col.prop(self, "include_animation")
 
         tex_col = self.layout.box().column()
         tex_col.label(text="Texture:", icon='TEXTURE_DATA')
