@@ -111,16 +111,48 @@ def Scope "Objects"
             references = </Armatures/"""+Rename(mod.object.name)+""">
         )"""
                     break
+        usda += """
+        {"""
         
+        # joints
+        if utils.keywords["include_armatures"]:
+            armature = None
+            for mod in obj.modifiers:
+                if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
+                    armature = mod.object.data
+                    break
+            if armature:
+                joints = {}
+                for bone in armature.bones:
+                    bone_name = bone.name
+                    bo = bone
+                    while bo.parent:
+                        bone_name = bo.name +'/'+ bone_name
+                        bo = bo.parent
+                    joints[bone.name] = bone_name
+                
+                groups = []
+                for group in obj.vertex_groups:
+                    if group.name in joints:
+                        groups.append(joints[group.name])
+                    else:
+                        groups.append("")
+
+                usda += """
+            def Skeleton "skeleton"
+            {
+                uniform token[] joints = """+str(groups).replace("'", '"')+"""
+            }"""
+
         mesh_name = obj.name if utils.keywords["apply_modifiers"] else obj.data.name
         
         usda += """
-        {
             def Mesh "mesh"(
                 references = </Meshes/"""+Rename(mesh_name)+""">
             )
             {"""
 
+        # bind materials
         for i, material_slot in enumerate(obj.material_slots):
             if material_slot.material:
                 usda += """
