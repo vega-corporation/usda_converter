@@ -113,8 +113,9 @@ def ConvertMeshData(mesh):
             interpolation = "vertex"
         )"""
 
-    # Subdivision is not supported by usdz
+    # Properties that are valid for usda but not supported by usdz
     usda += """
+        uniform bool doubleSided = 1
         uniform token subdivisionScheme = "none"""+'"'
 
     for i, ids in enumerate(mat_ids):
