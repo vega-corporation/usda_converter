@@ -3,6 +3,7 @@ import numpy as np
 import os
 import copy
 import shutil
+from mathutils import Matrix
 
 from . import utils
 from .utils import Rename
@@ -31,7 +32,7 @@ def UsdaInit():
 
 
 
-def ObjectAnimationData():
+def ObjectAnimation():
     obj_mats = {}
     for obj in utils.objects:
         obj_mats[obj.name] = []
@@ -54,6 +55,81 @@ def ObjectAnimationData():
 
 
 
+def ConvertSkeleton(obj):
+    usda = ""
+    obj_armature = None
+    for mod in obj.modifiers:
+        if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
+            obj_armature = mod.object
+            break
+
+    if obj_armature:
+        armature = obj_armature.data
+        joints = {}
+        for bone in armature.bones:
+            bone_name = bone.name
+            bo = bone
+            while bo.parent:
+                bo = bo.parent
+                bone_name = bo.name +'/'+ bone_name
+            joints[bone.name] = bone_name
+        
+        bone_names = [bone.name for bone in armature.bones]
+        group_names = [g.name for g in obj.vertex_groups]
+        valid_names = [name for name in bone_names if name in group_names]
+        invalid_names = [name for name in bone_names if name not in group_names]
+        names = []
+        for i, group in enumerate(obj.vertex_groups):
+            if i == len(joints):
+                break
+            if group.name in valid_names:
+                names.append(joints[group.name])
+                valid_names.remove(group.name)
+            else:
+                if invalid_names:
+                    names.append(invalid_names.pop(0))
+                else:
+                    names.append(" ")
+        names += valid_names + invalid_names
+
+        restTransforms = []
+        bindTransforms = []
+        for i, group in enumerate(obj.vertex_groups):
+            if i == len(joints):
+                break
+
+            # Specifies the rest-pose transforms of each joint in local space
+            if group.name in valid_names:
+                matrix = [tuple(v) for v in obj_armature.pose.bones[group.name].matrix]
+            else:
+                matrix = [tuple(v) for v in Matrix()]
+            restTransforms.append(tuple(matrix))
+
+            # Specifies the bind-pose transforms of each joint in world space
+            if group.name in valid_names:
+                matrix = [tuple(v) for v in armature.bones[group.name].matrix_local]
+            else:
+                matrix = [tuple(v) for v in Matrix()]
+            bindTransforms.append(tuple(matrix))
+
+        while len(restTransforms) < len(names):
+            matrix = [tuple(v) for v in Matrix()]
+            restTransforms.append(tuple(matrix))
+            bindTransforms.append(tuple(matrix))
+
+        usda += """
+            def Skeleton "skeleton"
+            {
+                uniform token[] joints = """+str(names).replace("'", '"')+"""
+                uniform matrix4d[] restTransforms = """+str(restTransforms)+"""
+                uniform matrix4d[] bindTransforms = """+str(bindTransforms)+"""
+            }"""
+
+    return usda
+
+
+            
+
 def ConvertObjects():
     usda = """
 
@@ -63,7 +139,7 @@ def Scope "Objects"
 
     # keyflame animation
     if utils.keywords["include_animation"]:
-        animation_data = ObjectAnimationData()
+        animation_data = ObjectAnimation()
 
     for obj in utils.objects:
         usda += """
@@ -116,33 +192,7 @@ def Scope "Objects"
         
         # joints
         if utils.keywords["include_armatures"]:
-            armature = None
-            for mod in obj.modifiers:
-                if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
-                    armature = mod.object.data
-                    break
-            if armature:
-                joints = {}
-                for bone in armature.bones:
-                    bone_name = bone.name
-                    bo = bone
-                    while bo.parent:
-                        bone_name = bo.name +'/'+ bone_name
-                        bo = bo.parent
-                    joints[bone.name] = bone_name
-                
-                groups = []
-                for group in obj.vertex_groups:
-                    if group.name in joints:
-                        groups.append(joints[group.name])
-                    else:
-                        groups.append("")
-
-                usda += """
-            def Skeleton "skeleton"
-            {
-                uniform token[] joints = """+str(groups).replace("'", '"')+"""
-            }"""
+            usda += ConvertSkeleton(obj)
 
         mesh_name = obj.name if utils.keywords["apply_modifiers"] else obj.data.name
         
