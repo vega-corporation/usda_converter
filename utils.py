@@ -25,7 +25,8 @@ def SetTargets(key):
 
 
 def Rename(name):
-    usd_name = name.replace(",", "_").replace(".", "_").replace("-", "_").replace(" ", "")
-    if len(name) > 0 and name[0].isdecimal():
+    usd_name = name.encode('utf-8', 'replace').hex()
+    usd_name = usd_name.replace(",", "_").replace(".", "_").replace("-", "_").replace(" ", "")
+    if usd_name and usd_name[0].isdecimal():
         usd_name = "_"+usd_name
     return usd_name
