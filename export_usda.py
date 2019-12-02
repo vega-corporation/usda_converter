@@ -55,6 +55,7 @@ def ObjectAnimation():
 
 
 
+
 def ConvertSkeleton(obj):
     usda = ""
     obj_armature = None
@@ -72,7 +73,7 @@ def ConvertSkeleton(obj):
             while bo.parent:
                 bo = bo.parent
                 bone_name = bo.name +'/'+ bone_name
-            joints[bone.name] = bone_name
+            joints[bone.name] = Rename(bone_name)
         
         bone_names = [bone.name for bone in armature.bones]
         group_names = [g.name for g in obj.vertex_groups]
@@ -87,7 +88,7 @@ def ConvertSkeleton(obj):
                 valid_names.remove(group.name)
             else:
                 if invalid_names:
-                    names.append(invalid_names.pop(0))
+                    names.append(invalid_names.pop())
                 else:
                     names.append(" ")
         names += valid_names + invalid_names
@@ -128,7 +129,7 @@ def ConvertSkeleton(obj):
     return usda
 
 
-            
+
 
 def ConvertObjects():
     usda = """
