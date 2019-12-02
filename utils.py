@@ -17,6 +17,7 @@ def SetTargets(key):
         objects = bpy.context.selected_objects
     else:
         objects = bpy.context.scene.objects[:]
+    objects = [obj for obj in objects if obj.type == 'MESH']
     objects = tuple(objects)
 
     asset_dir = os.path.splitext(key["filepath"])[0] + '_assets'
