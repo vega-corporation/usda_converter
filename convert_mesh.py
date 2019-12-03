@@ -3,6 +3,7 @@ import numpy as np
 import math
 import os
 import shutil
+import bmesh
 
 from . import utils
 from .utils import Rename
@@ -11,7 +12,6 @@ from .utils import Rename
 
 
 def MeshTriangulate(me):
-    import bmesh
     bm = bmesh.new()
     bm.from_mesh(me)
     bmesh.ops.triangulate(bm, faces=bm.faces)
