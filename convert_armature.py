@@ -26,11 +26,11 @@ def SkelAnimationData(bones):
         rotations_old = []
         scales_old = []
         for bone in bones:
-            if bone.parent:
+            if bone.parent and bone.bone.use_connect:
                 par_inv = bone.parent.matrix_channel.inverted_safe()
             else:
                 par_inv = Matrix()
-
+            
             mat = par_inv @ bone.matrix_channel
 
             loc, rot, scale = mat.decompose()
