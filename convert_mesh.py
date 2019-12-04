@@ -20,7 +20,7 @@ def MeshTriangulate(me):
 
 
 
-def ConvertMeshData(mesh):
+def ConvertMeshData(usda, mesh):
     # get vertex
     faceVertexCounts = [None]*len(mesh.polygons)
     mesh.polygons.foreach_get("loop_total", faceVertexCounts)
@@ -74,22 +74,23 @@ def ConvertMeshData(mesh):
     extent = np.array(points)
     extent = [tuple(np.min(extent, axis=0)), tuple(np.max(extent, axis=0))]
 
-    usda = """
-        float3[] extent = """+str(extent)+"""
-        int[] faceVertexCounts = """+str(faceVertexCounts)+"""
-        int[] faceVertexIndices = """+str(faceVertexIndices)+"""
-        point3f[] points = """+str(points)+"""
-        normal3f[] primvars:normals = """+str(normals)+""" (
+    usda.append(f"""
+        float3[] extent = {extent}
+        int[] faceVertexCounts = {faceVertexCounts}
+        int[] faceVertexIndices = {faceVertexIndices}
+        point3f[] points = {points}
+        normal3f[] primvars:normals = {normals} (
             interpolation = "faceVarying"
         )
-        int[] primvars:normals:indices = """+str(normals_indices)
-        
+        int[] primvars:normals:indices = {normals_indices}"""
+    )
     if uv:
-        usda += """
-        texCoord2f[] primvars:uv = """+str(uv)+""" (
+        usda.append(f"""
+        texCoord2f[] primvars:uv = {uv} (
             interpolation = "faceVarying"
         )
-        int[] primvars:uv:indices = """+str(uv_indices)
+        int[] primvars:uv:indices = {uv_indices}"""
+        )
 
     if utils.keywords["include_armatures"]:
         elementsize = 0
@@ -103,40 +104,41 @@ def ConvertMeshData(mesh):
             for j, g in enumerate(v.groups):
                 joint_indices[i*elementsize+j] = g.group
                 joint_weights[i*elementsize+j] = g.weight
-        usda += """
-        int[] primvars:skel:jointIndices = """+str(joint_indices)+""" (
-            elementSize = """+str(elementsize)+"""
+        usda.append(f"""
+        int[] primvars:skel:jointIndices = {joint_indices} (
+            elementSize = {elementsize}
             interpolation = "vertex"
         )
-        float[] primvars:skel:jointWeights = """+str(joint_weights)+""" (
-            elementSize = """+str(elementsize)+"""
+        float[] primvars:skel:jointWeights = {joint_weights} (
+            elementSize = {elementsize}
             interpolation = "vertex"
         )"""
+        )
 
     # Properties that are valid for usda but not supported by usdz
-    usda += """
+    usda.append("""
         uniform bool doubleSided = 1
-        uniform token subdivisionScheme = "none"""+'"'
+        uniform token subdivisionScheme = "none\""""
+    )
 
     for i, ids in enumerate(mat_ids):
-        usda += """
-        def """+'"'+"mat_"+str(i).zfill(4)+'"'+"""
-        {
+        usda.append(f"""
+        def "mat_{str(i).zfill(4)}"
+        {{
             uniform token elementType = "face"
             uniform token familyName = "materialBind"
-            int[] indices = """+str(list(ids))+"""
-        }"""
-
-    return usda
-
+            int[] indices = {list(ids)}
+        }}"""
+        )
 
 
 
-def ConvertMeshes():
-    usda = """
+
+def ConvertMeshes(usda):
+    usda.append("""
 
 def Scope "Meshes"
-{"""
+{""")
 
     # get meshes
     meshes = []
@@ -169,18 +171,16 @@ def Scope "Meshes"
             MeshTriangulate(me)
 
         # get mesh data
-        usda += """
-    def """+'"'+Rename(name)+'"'+"""
-    {"""
-        usda += ConvertMeshData(me)
+        usda.append(f"""
+    def "{Rename(name)}"
+    {{""")
 
-        usda += """
-    }"""
+        ConvertMeshData(usda, me)
+
+        usda.append("""
+    }""")
         # clear
         ob_for_convert.to_mesh_clear()
     
-    usda += """
-}"""
-
-    return usda
-
+    usda.append("""
+}""")

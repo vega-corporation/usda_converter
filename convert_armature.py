@@ -56,20 +56,18 @@ def SkelAnimationData(bones):
 
 
 
-def ConvertSkel(obj_armature):
+def ConvertSkel(usda, obj_armature):
     armature = obj_armature.data
 
-    usda = """
-    def """+'"'+Rename(armature.name)+'"'+"""
-    {
-        rel skel:skeleton = </Armatures/"""+Rename(armature.name)+"""/skeleton>
-        rel skel:animationSource = </Armatures/"""+Rename(armature.name)+"""/animation>"""
-        
-    # animation data
-    usda += """
+    usda.append(f"""
+    def "{Rename(armature.name)}"
+    {{
+        rel skel:skeleton = </Armatures/{Rename(armature.name)}/skeleton>
+        rel skel:animationSource = </Armatures/{Rename(armature.name)}/animation>
 
         def SkelAnimation "animation"
-        {"""
+        {{"""
+    )
 
     if utils.keywords["include_animation"]:
         translations, rotations, scales = SkelAnimationData(obj_armature.pose.bones)
@@ -83,38 +81,42 @@ def ConvertSkel(obj_armature):
                 bone_name = bo.name +'/'+ bone_name
             joints.append(Rename(bone_name))
 
-        usda += """
-            uniform token[] joints = """+str(joints).replace("'", '"')
-            
-        usda += """
-            float3[] translations.timeSamples = {"""
+        usda.append(f"""
+            uniform token[] joints = {str(joints).replace("'", '"')}
+            float3[] translations.timeSamples = {{"""
+        )
         for frame, translation in translations:
-            usda += """
-                """+str(frame)+": "+str(translation)+","
-        usda += """
+            usda.append(f"""
+                {frame}: {translation},"""
+            )
+        usda.append("""
             }
             quatf[] rotations.timeSamples = {"""
+        )
         for frame, rotation in rotations:
-            usda += """
-                """+str(frame)+": "+str(rotation)+","
-        usda += """
+            usda.append(f"""
+                {frame}: {rotation},"""
+            )
+        usda.append("""
             }
             half3[] scales.timeSamples = {"""
+        )
         for frame, scale in scales:
-            usda += """
-                """+str(frame)+": "+str(scale)+","
-        usda += """
+            usda.append(f"""
+                {frame}: {scale},"""
+            )
+        usda.append("""
             }"""
-
-    usda += """
+        )
+    usda.append("""
         }
     }"""
-    
-    return usda
+    )
 
 
 
-def ConvertArmatures():
+
+def ConvertArmatures(usda):
     if not utils.keywords["include_armatures"]:
         return ""
     
@@ -126,16 +128,13 @@ def ConvertArmatures():
                 armatures.append(mod.object)
     armatures = list(set(armatures))
 
-    usda = """
+    usda.append("""
 
 def Scope "Armatures"
-{"""
+{""")
 
     for armature in armatures:
-        usda += ConvertSkel(armature)
+        ConvertSkel(usda, armature)
     
-    usda += """
-}"""
-
-    return usda
-
+    usda.append("""
+}""")
