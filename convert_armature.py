@@ -118,7 +118,7 @@ def ConvertSkel(usda, obj_armature):
 
 def ConvertArmatures(usda):
     if not utils.keywords["include_armatures"]:
-        return ""
+        return
     
     # get armatures
     armatures = []

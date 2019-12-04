@@ -3,7 +3,7 @@
 bl_info = {
 	"name" : "usda converter",
     "author" : "Nobuo Moritake",
-    "version" : (1,0),
+    "version" : (0,8),
     "blender" : (2, 80, 0),
     "location" : "File > Import-Export",
     "description" : "export models (.usda)",
