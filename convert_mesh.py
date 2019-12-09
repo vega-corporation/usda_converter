@@ -139,10 +139,22 @@ def ConvertMeshes(usda):
 
 def Scope "Meshes"
 {""")
+    # get depsgraph once
+    if utils.keywords["apply_modifiers"]:
+        scn = bpy.context.scene
+        orig_frame = scn.frame_current
+        scn.frame_set(scn.frame_start)
+        for armature in utils.armatures:
+            armature.data.pose_position = 'REST'
+
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+
+        scn.frame_set(orig_frame)
+        for armature in utils.armatures:
+            armature.data.pose_position = 'POSE'
 
     # get meshes
     meshes = []
-    depsgraph = bpy.context.evaluated_depsgraph_get()
 
     for obj in utils.objects:
 
