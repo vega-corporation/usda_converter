@@ -70,8 +70,8 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             )
     apply_modifiers: BoolProperty(
             name="Apply Modifiers",
-            description="Apply modifiers: may conflict with armature or animation",
-            default=False,
+            description="Apply modifiers",
+            default=True,
             )
     include_uvs: BoolProperty(
             name="Include UVs",
