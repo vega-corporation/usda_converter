@@ -1,9 +1,5 @@
 import bpy
-import numpy as np
-import math
-import os
 import copy
-import shutil
 from mathutils import Matrix
 
 from bpy_extras.io_utils import axis_conversion

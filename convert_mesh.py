@@ -1,8 +1,5 @@
 import bpy
 import numpy as np
-import math
-import os
-import shutil
 import bmesh
 
 from . import utils

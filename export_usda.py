@@ -1,9 +1,6 @@
 import bpy
 import numpy as np
-import os
 import copy
-import shutil
-from mathutils import Matrix
 
 from . import utils
 from .utils import Rename

@@ -14,8 +14,6 @@ bl_info = {
 }
 
 
-import os
-import shutil
 
 if "bpy" in locals():
     import importlib
