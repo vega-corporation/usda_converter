@@ -82,7 +82,7 @@ def Scope "Objects"
             )
             for frame, mat in animation_data[obj.name]:
                 usda.append(f"""
-            {frame}: {tuple(np.array(mat.to_translation())*100)},"""
+            {frame}: {tuple(np.array(mat.to_translation()))},"""
                 )
             usda.append("""
         }
@@ -98,7 +98,7 @@ def Scope "Objects"
             )
             for frame, mat in animation_data[obj.name]:
                 usda.append(f"""
-            {frame}: {tuple(np.array(mat.to_scale())*100)},"""
+            {frame}: {tuple(np.array(mat.to_scale()))},"""
                 )
             usda.append("""
         }"""
@@ -107,9 +107,9 @@ def Scope "Objects"
         else:
             mat = obj.matrix_world
             usda.append(f"""
-        double3 xformOp:translate = {tuple(np.array(mat.to_translation())*100)}
+        double3 xformOp:translate = {tuple(np.array(mat.to_translation()))}
         float3 xformOp:rotateXYZ = {tuple(np.array(mat.to_euler())*180/np.pi)}
-        float3 xformOp:scale = {tuple(np.array(mat.to_scale())*100)}"""
+        float3 xformOp:scale = {tuple(np.array(mat.to_scale()))}"""
         )
 
         usda.append("""
@@ -119,21 +119,15 @@ def Scope "Objects"
 
         # references skel and mesh
         # payload or references other files are not supported by usdzconverter 0.61
-        if utils.keywords["include_armatures"]:
-            for mod in obj.modifiers:
-                if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
-                    usda.append(f"""(
-            references = </Armatures/{Rename(mod.object.name)}>
+        if utils.armature_obj[obj.name]:
+            usda.append(f"""(
+            references = </Armatures/{Rename(utils.armature_obj[obj.name].name)}>
         )"""
                     )
-                    break
+        
         usda.append("""
         {"""
         )
-        
-        # joints
-        if utils.keywords["include_armatures"]:
-            ConvertSkeleton(usda, obj)
 
         mesh_name = obj.name if utils.keywords["apply_modifiers"] else obj.data.name
         

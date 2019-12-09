@@ -160,14 +160,6 @@ def ConvertSkelAnim(usda, obj_armature):
 def ConvertArmatures(usda):
     if not utils.keywords["include_armatures"]:
         return
-    
-    # get armatures
-    armatures = []
-    for obj in utils.objects:
-        for mod in obj.modifiers:
-            if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
-                armatures.append(mod.object)
-    armatures = list(set(armatures))
 
     usda.append("""
 

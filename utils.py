@@ -4,11 +4,11 @@ import os
 
 
 def SetTargets(key):
-    from bpy_extras.io_utils import axis_conversion
     global keywords
     global objects
     global asset_dir
-    global global_matrix
+    global armatures
+    global armature_obj
 
     keywords = key
 
@@ -22,7 +22,16 @@ def SetTargets(key):
 
     asset_dir = os.path.splitext(key["filepath"])[0] + '_assets'
 
-    global_matrix = (axis_conversion(to_forward='Y', to_up='Z').to_4x4())
+    armatures = []
+    armature_obj = {obj.name:None for obj in objects}
+    if key["include_armatures"]:
+        for obj in objects:
+            for mod in obj.modifiers:
+                if mod.bl_rna.identifier == 'ArmatureModifier' and mod.object:
+                    armature_obj[obj.name] = mod.object
+                    armatures.append(mod.object)
+                    break
+    armatures = tuple(set(armatures))
 
 
 def Rename(name):
