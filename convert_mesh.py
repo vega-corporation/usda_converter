@@ -17,7 +17,7 @@ def MeshTriangulate(me):
 
 
 
-def ConvertMeshData(usda, mesh):
+def ConvertMeshData(usda, mesh, obj):
     # get vertex
     faceVertexCounts = [None]*len(mesh.polygons)
     mesh.polygons.foreach_get("loop_total", faceVertexCounts)
@@ -101,7 +101,14 @@ def ConvertMeshData(usda, mesh):
             for j, g in enumerate(v.groups):
                 joint_indices[i*elementsize+j] = g.group
                 joint_weights[i*elementsize+j] = g.weight
-        usda.append(f"""
+                
+        if utils.armature_obj[obj.name]:
+            bones = utils.armature_obj[obj.name].data.bones
+            g_names = {g.name: i for i, g in enumerate(obj.vertex_groups)}
+            ids_convert = {g_names[bone.name]: i for i, bone in enumerate(bones) if bone.name in g_names}
+            joint_indices = [ids_convert[j_id] if j_id in ids_convert else 0 for j_id in joint_indices]
+            
+            usda.append(f"""
         int[] primvars:skel:jointIndices = {joint_indices} (
             elementSize = {elementsize}
             interpolation = "vertex"
@@ -110,7 +117,7 @@ def ConvertMeshData(usda, mesh):
             elementSize = {elementsize}
             interpolation = "vertex"
         )"""
-        )
+            )
 
     # Properties that are valid for usda but not supported by usdz
     usda.append("""
@@ -184,7 +191,7 @@ def Scope "Meshes"
     def "{Rename(name)}"
     {{""")
 
-        ConvertMeshData(usda, me)
+        ConvertMeshData(usda, me, obj)
 
         usda.append("""
     }""")
