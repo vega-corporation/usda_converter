@@ -25,11 +25,11 @@ def ConvertSkeleton(usda, obj_armature):
         joints.append(Rename(bone_name))
     
         # Specifies the rest-pose transforms of each joint in local space
-        matrix = [tuple(v) for v in Matix()]
+        matrix = [tuple(v) for v in Matrix()]
         restTransforms.append(tuple(matrix)) 
 
         # Specifies the bind-pose transforms of each joint in world space
-        matrix = [tuple(v) for v in Matix()]
+        matrix = [tuple(v) for v in Matrix()]
         bindTransforms.append(tuple(matrix))
     
     armature.pose_position = 'POSE'
