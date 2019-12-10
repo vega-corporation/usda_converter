@@ -1,5 +1,4 @@
 import bpy
-import numpy as np
 
 from . import node_utils
 
