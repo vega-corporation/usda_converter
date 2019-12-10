@@ -87,13 +87,13 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             default=True,
             )
     include_armatures: BoolProperty(
-            name="Include Armatures",
+            name="!EXPERIMENTAL! Include Armatures",
             description="Write out the Armatures",
-            default=True,
+            default=False,
             )
     make_new_textures: BoolProperty(
-            name="Make New Textures",
-            description="Generate the new textures from shader data",
+            name="Make Textures Asset",
+            description="Generate the new textures in asset folder",
             default=True,
             )
             
