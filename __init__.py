@@ -3,7 +3,7 @@
 bl_info = {
 	"name" : "usda converter",
     "author" : "Nobuo Moritake",
-    "version" : (1,0),
+    "version" : (0,8),
     "blender" : (2, 80, 0),
     "location" : "File > Import-Export",
     "description" : "export models (.usda)",
@@ -14,19 +14,19 @@ bl_info = {
 }
 
 
-import os
-import shutil
 
 if "bpy" in locals():
     import importlib
     importlib.reload(utils)
     importlib.reload(convert_material)
     importlib.reload(convert_mesh)
+    importlib.reload(convert_armature)
     importlib.reload(export_usda)
 else:
     from . import utils
     from . import convert_material
     from . import convert_mesh
+    from . import convert_armature
     from . import export_usda
 
 import bpy
@@ -82,9 +82,14 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
             default=True,
             )
     include_animation: BoolProperty(
-            name="Include keyframe",
-            description="Write out keyframe Animations",
+            name="Include Animation",
+            description="Write out Animations",
             default=True,
+            )
+    include_armatures: BoolProperty(
+            name="!EXPERIMENTAL! Include Armatures",
+            description="Write out the Armatures",
+            default=False,
             )
     make_new_textures: BoolProperty(
             name="Make Textures Asset",
@@ -108,6 +113,10 @@ class ExportUsda(bpy.types.Operator, ExportHelper):
         anim_col = self.layout.box().column()
         anim_col.label(text="Animation:", icon='ANIM_DATA')
         anim_col.prop(self, "include_animation")
+
+        arm_col = self.layout.box().column()
+        arm_col.label(text="Armature:", icon='ARMATURE_DATA')
+        arm_col.prop(self, "include_armatures")
 
         tex_col = self.layout.box().column()
         tex_col.label(text="Texture:", icon='TEXTURE_DATA')

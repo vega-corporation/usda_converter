@@ -2,8 +2,8 @@
 
 This is an add-on that can export 3d models by usda file format from blender.
 
-usda is an ASCII file format of the usd format developed by pixar.  
-if usda converted to usdz, it can be used for AR content on a website and iOS AR apps.  
+usda is an ASCII file format of the usd format developed by pixar.
+if usda converted to usdz, it can be used for AR content on a website and iOS AR apps.
 The best way to create usdz is to use [usdz_tools](https://developer.apple.com/augmented-reality/quick-look/) provided by apple.
 
 
@@ -30,17 +30,17 @@ File> Export> Usda (.usda)
 
 #### Meshes
 
-Meshes can apply modifiers and triangulation., and can include UVs, etc.  
-It is recommended to do triangulation because it may damage the appearance.
+Meshes can apply modifiers, triangulation and can include UVs.  
+It is recommended to apply triangulation because it may damage the appearance.
 
 #### Animations
 
-Currently animation supports only with keyframe input is supported, armatures are not supported.
+Only animations with keyframe input have been verified to work correctly, but the armature is not yet complete.
 
 #### Textures
 
-To create usda compatible PBR materials, this add-on automatically generates texture assets by scanning the material's node tree.
-
+This add-on can automatically generate texture assets.
+When texture option is enabled, the material node tree is scanned and usda compatible PBR materials and textures are created.(Grouped nodes are not yet supported)
 
 ## License
 
