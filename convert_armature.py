@@ -23,21 +23,13 @@ def ConvertSkeleton(usda, obj_armature):
             bo = bo.parent
             bone_name = bo.name +'/'+ bone_name
         joints.append(Rename(bone_name))
-
-        global_matrix = (axis_conversion(to_forward='-Z', to_up='Y').to_4x4())
     
         # Specifies the rest-pose transforms of each joint in local space
-        mat = global_matrix @ obj_armature.pose.bones[bone.name].matrix
-        for i in range(3):
-            mat[i][3] *= 0.01
-        matrix = [tuple(v) for v in mat]
+        matrix = [tuple(v) for v in Matix()]
         restTransforms.append(tuple(matrix)) 
 
         # Specifies the bind-pose transforms of each joint in world space
-        mat = obj_armature.matrix_world @ global_matrix @ armature.bones[bone.name].matrix_local
-        for i in range(3):
-            mat[i][3] *= 0.01
-        matrix = [tuple(v) for v in mat]
+        matrix = [tuple(v) for v in Matix()]
         bindTransforms.append(tuple(matrix))
     
     armature.pose_position = 'POSE'
