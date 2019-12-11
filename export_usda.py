@@ -79,7 +79,7 @@ def Scope "Objects"
             )
             for frame, mat in animation_data[obj.name]:
                 usda.append(f"""
-            {frame}: {tuple(np.array(mat.to_translation()))},"""
+            {frame}: {tuple(np.array(mat.to_translation())*100)},"""
                 )
             usda.append("""
         }
@@ -95,7 +95,7 @@ def Scope "Objects"
             )
             for frame, mat in animation_data[obj.name]:
                 usda.append(f"""
-            {frame}: {tuple(np.array(mat.to_scale()))},"""
+            {frame}: {tuple(np.array(mat.to_scale())*100)},"""
                 )
             usda.append("""
         }"""
@@ -104,9 +104,9 @@ def Scope "Objects"
         else:
             mat = obj.matrix_world
             usda.append(f"""
-        double3 xformOp:translate = {tuple(np.array(mat.to_translation()))}
+        double3 xformOp:translate = {tuple(np.array(mat.to_translation())*100)}
         float3 xformOp:rotateXYZ = {tuple(np.array(mat.to_euler())*180/np.pi)}
-        float3 xformOp:scale = {tuple(np.array(mat.to_scale()))}"""
+        float3 xformOp:scale = {tuple(np.array(mat.to_scale())*100)}"""
         )
 
         usda.append("""
