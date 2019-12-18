@@ -55,18 +55,18 @@ def CompositeTree(scn, mat, color, socket, name):
 
     # copy texture if no change
     if from_node.type == 'TEX_IMAGE':
-        filepath = from_node.image.filepath_from_user()
-        if os.path.exists(filepath):
-            if utils.keywords["make_new_textures"]:
-                ext = os.path.splitext(filepath)[1]
-                tex_path = os.path.join(mat_dir, name+ext)
-                os.makedirs(mat_dir, exist_ok=True)
-                shutil.copy(filepath, tex_path)
-                color_ = [usda_shader.UsdaTexture()]
+        if utils.keywords["make_new_textures"]:
+            if from_node.image.file_format == 'PNG':
+                tex_path = os.path.join(mat_dir, name+'.png')
+                from_node.image.save_render(tex_path)
                 color_[0].file = usd_tex_dir+'/'+name+os.path.splitext(tex_path)[1]
-            else:
-                color_ = [usda_shader.UsdaTexture()]
-                color_[0].file = filepath
+            elif from_node.image.file_format == 'JPEG':
+                tex_path = os.path.join(mat_dir, name+'.jpg')
+                from_node.image.save_render(tex_path)
+                color_[0].file = usd_tex_dir+'/'+name+os.path.splitext(tex_path)[1]
+        elif not from_node.image.packed_file:
+            filepath = from_node.image.filepath_from_user()
+            color_[0].file = filepath
 
     # make composite texture
     elif utils.keywords["make_new_textures"]:
