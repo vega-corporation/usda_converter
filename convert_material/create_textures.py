@@ -55,18 +55,22 @@ def CompositeTree(scn, mat, color, socket, name):
 
     # copy texture if no change
     if from_node.type == 'TEX_IMAGE':
+        image = from_node.image
+        filepath = image.filepath_from_user()
         if utils.keywords["make_new_textures"]:
-            if from_node.image.file_format == 'PNG':
-                tex_path = os.path.join(mat_dir, name+'.png')
-                from_node.image.save_render(tex_path)
-                color_[0].file = usd_tex_dir+'/'+name+os.path.splitext(tex_path)[1]
-            elif from_node.image.file_format == 'JPEG':
-                tex_path = os.path.join(mat_dir, name+'.jpg')
-                from_node.image.save_render(tex_path)
-                color_[0].file = usd_tex_dir+'/'+name+os.path.splitext(tex_path)[1]
-        elif not from_node.image.packed_file:
-            filepath = from_node.image.filepath_from_user()
-            color_[0].file = filepath
+            os.makedirs(mat_dir, exist_ok=True)
+            ext = os.path.splitext(filepath)[1]
+            tex_path = os.path.join(mat_dir, name+ext)
+            if os.path.exists(filepath):
+                shutil.copy(filepath, tex_path)
+                color_[0].file = usd_tex_dir+'/'+name+ext
+            elif image.packed_file and image.filepath in image.packed_files:
+                image.packed_files[image.filepath].save()
+                shutil.move(filepath, tex_path)
+                color_[0].file = usd_tex_dir+'/'+name+ext
+        else:
+            if os.path.exists(filepath):
+                color_[0].file = filepath
 
     # make composite texture
     elif utils.keywords["make_new_textures"]:
